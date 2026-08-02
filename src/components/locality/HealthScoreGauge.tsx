@@ -9,13 +9,13 @@ interface HealthScoreGaugeProps {
 
 const getScoreColor = (score: number): string => {
   if (score >= 70) return 'text-[var(--status-green)]';
-  if (score >= 40) return 'text-[var(--status-yellow)]';
+  if (score >= 40) return 'text-[var(--text-primary)]';
   return 'text-[var(--status-red)]';
 };
 
 const getScoreRing = (score: number): string => {
   if (score >= 70) return 'stroke-[var(--status-green)]';
-  if (score >= 40) return 'stroke-[var(--status-yellow)]';
+  if (score >= 40) return 'stroke-[var(--black)]';
   return 'stroke-[var(--status-red)]';
 };
 

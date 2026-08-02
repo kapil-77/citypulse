@@ -1,96 +1,134 @@
-import { useEffect } from 'react';
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapShell } from '../components/layout/MapShell';
-import { BottomSheet, useBottomSheet } from '../components/layout/BottomSheet';
-import { FAB } from '../components/layout/FAB';
+import { motion, AnimatePresence } from 'framer-motion';
 import { TopBar } from '../components/layout/TopBar';
+import { Button } from '../components/ui/Button';
+import { Card, CardTitle } from '../components/ui/Card';
 import { IssueCard } from '../components/issue/IssueCard';
-import { EmptyState } from '../components/ui/EmptyState';
-import { StaggerContainer, StaggerItem } from '../components/layout/PageTransition';
-import { useStore, useIssues } from '../store';
-import type { Issue } from '../types/issue';
+import { LocationSearch } from '../components/location/LocationSearch';
+import { PopularLocations } from '../components/location/PopularLocations';
+import { UseMyLocation } from '../components/location/UseMyLocation';
+import { useIssues, useSelectedLocation, useSelectLocation } from '../store';
+import type { LocationResult } from '../data/indiaLocations';
 
 export const HomePage = () => {
   const navigate = useNavigate();
   const issues = useIssues();
-  const { open: openBottomSheet, close: closeBottomSheet } = useBottomSheet();
-  const selectIssue = useStore((s) => s.selectIssue);
-  const flyTo = useStore((s) => s.flyTo);
+  const selectedLocation = useSelectedLocation();
+  const selectLocation = useSelectLocation();
 
-  useEffect(() => {
-    openBottomSheet('issues_list');
-  }, []);
+  // Filter issues by the selected location (match city/state name in the issue address)
+  const filteredIssues = useMemo(() => {
+    if (!selectedLocation) return [];
+    const name = selectedLocation.name.toLowerCase();
+    const state = selectedLocation.state.toLowerCase();
 
-  const handleMarkerClick = (issue: Issue) => {
-    selectIssue(issue);
-    flyTo(issue.location, 16);
-    openBottomSheet('issue_detail');
+    return issues.filter((issue) => {
+      const address = issue.address.toLowerCase();
+      return address.includes(name) || address.includes(state);
+    });
+  }, [issues, selectedLocation]);
+
+  const handleLocationSelect = (loc: LocationResult) => {
+    selectLocation(loc);
   };
 
-  const handleMapClick = () => closeBottomSheet();
-
-  const markers = issues.map((issue) => ({
-    id: issue.id,
-    position: issue.location,
-    title: issue.title,
-    category: issue.category,
-    severity: issue.severity,
-    onClick: () => handleMarkerClick(issue),
-  }));
+  const locationLabel = selectedLocation
+    ? `${selectedLocation.name.toUpperCase()}, ${selectedLocation.state.toUpperCase()}`
+    : 'ALL INDIA';
 
   return (
-    <div className="relative h-full w-full bg-[var(--bg-page)]">
-      {/* Map - always the hero, full bleed */}
-      <div className="absolute inset-0">
-        <MapShell markers={markers} onMapClick={handleMapClick} className="border-0 h-full" />
-      </div>
-
-      {/* Top bar overlay */}
+    <div className="min-h-full bg-[var(--bg-page)]">
       <TopBar
         title="CityPulse"
         rightAction={
-          <button onClick={() => navigate('/localities')} className="text-xs uppercase tracking-wider text-[var(--accent)] hover:text-[var(--accent-hover)] font-medium">
+          <button onClick={() => navigate('/localities')} className="text-xs uppercase tracking-[0.08em] text-white/80 hover:text-white font-medium">
             Health
           </button>
         }
-        className="absolute top-0 left-0 right-0 z-20 bg-[var(--bg-surface)]/90 backdrop-blur-sm border-b border-[var(--border)]"
       />
 
-      <FAB />
+      <main className="container py-8 md:py-14">
+        {/* ── Hero Search ─────────────────────────── */}
+        <section className="text-center mb-12 md:mb-16">
+          <h2 className="font-serif text-2xl md:text-4xl font-bold text-[var(--text-primary)] tracking-tight mb-3">
+            What's happening around you?
+          </h2>
 
-      <BottomSheet view="issues_list">
-        <div className="pt-2">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="font-serif text-xl font-semibold text-[var(--text-primary)]">
-              Recent Issues
-              {issues.length > 0 && (
-                <span className="ml-2 text-sm font-normal text-[var(--text-muted)]">({issues.length})</span>
-              )}
-            </h2>
-            <button onClick={() => navigate('/report')} className="text-xs uppercase tracking-wider text-[var(--accent)] hover:text-[var(--accent-hover)] font-medium">
-              Report New
+          <div className="max-w-xl mx-auto mt-8">
+            <LocationSearch onSelect={handleLocationSelect} />
+
+            <div className="mt-5 flex justify-center">
+              <PopularLocations onSelect={handleLocationSelect} />
+            </div>
+
+            <div className="mt-6 max-w-sm mx-auto">
+              <UseMyLocation onLocationFound={handleLocationSelect} />
+            </div>
+          </div>
+        </section>
+
+        <hr className="rule-dotted" />
+
+        {/* ── Selected Location / Issues ─────────── */}
+        <section className="mb-10">
+          <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
+            <div className="flex items-center gap-3">
+              <p className="label">Issues Near</p>
+              <h3 className="font-serif text-lg md:text-xl font-bold">{locationLabel}</h3>
+            </div>
+            <button
+              onClick={() => {
+                // Scroll to search hero
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="text-xs uppercase tracking-[0.08em] text-[var(--accent)] hover:text-[var(--accent-hover)] font-medium"
+            >
+              Change Location
             </button>
           </div>
 
-          {issues.length === 0 ? (
-            <EmptyState
-              icon="🗺️"
-              title="No issues reported yet"
-              description="Tap the camera button to report the first issue in your area."
-              actionLabel="Report Issue"
-              onAction={() => navigate('/report')}
-            />
-          ) : (
-            <StaggerContainer>
-              {issues.map((issue) => (
-                <StaggerItem key={issue.id}>
-                  <IssueCard issue={issue} compact />
-                </StaggerItem>
-              ))}
-            </StaggerContainer>
-          )}
-        </div>
-      </BottomSheet>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={selectedLocation?.name ?? 'none'}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              {filteredIssues.length === 0 ? (
+                <Card padding="lg" className="text-center py-14">
+                  <div className="text-3xl mb-4 font-serif">🗺️</div>
+                  <CardTitle className="mb-2">No issues reported here yet.</CardTitle>
+                  <p className="text-sm text-[var(--text-secondary)] max-w-sm mx-auto mb-6">
+                    Be the first to report one.
+                  </p>
+                  <Button variant="primary" size="md" onClick={() => navigate('/report')}>
+                    Report an Issue
+                  </Button>
+                </Card>
+              ) : (
+                <Card padding="none" className="divide-y divide-[var(--border-light)]">
+                  {filteredIssues.map((issue) => (
+                    <IssueCard key={issue.id} issue={issue} compact />
+                  ))}
+                </Card>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </section>
+
+        {/* ── Report CTA ─────────────────────────── */}
+        <section className="mb-8">
+          <Card padding="lg" className="text-center">
+            <p className="label mb-2">See something wrong?</p>
+            <h3 className="font-serif text-xl md:text-2xl font-bold mb-4">Report it in seconds.</h3>
+            <Button variant="primary" size="lg" onClick={() => navigate('/report')}>
+              Report an Issue
+            </Button>
+          </Card>
+        </section>
+      </main>
     </div>
   );
 };

@@ -9,7 +9,7 @@ import { useGeolocation } from '../services/geolocation/useGeolocation';
 import { reverseGeocode } from '../utils/geoUtils';
 import { useDuplicateCheck } from '../hooks/useDuplicateCheck';
 import { useStore, useIssues } from '../store';
-import type { IssueCategory, IssueSeverity, GeoPoint, NewIssue } from '../types/issue';
+import type { IssueCategory, IssueSeverity, GeoPoint } from '../types/issue';
 import { ISSUE_CATEGORY_LABELS } from '../types/issue';
 
 interface FormState {
@@ -24,9 +24,12 @@ interface FormState {
 
 const initialForm: FormState = { photos: [], title: '', description: '', category: '', severity: '', location: null, address: '' };
 
+// Fallback location used when geolocation is unavailable/denied but user provides an address manually
+const FALLBACK_LOCATION: GeoPoint = { lat: 28.6139, lng: 77.2090 }; // New Delhi
+
 export const ReportPage = () => {
   const navigate = useNavigate();
-  const addIssue = useStore((s) => s.addIssue);
+  const createIssue = useStore((s) => s.createIssue);
   const existingIssues = useIssues();
   const [form, setForm] = useState<FormState>(initialForm);
   const [step, setStep] = useState<'photo' | 'details' | 'review'>('photo');
@@ -36,7 +39,12 @@ export const ReportPage = () => {
   const [showDuplicates, setShowDuplicates] = useState(false);
 
   const { isChecking: isCheckingDuplicates, duplicates, hasChecked: hasCheckedDuplicates, checkForDuplicates, reset: resetDuplicates } = useDuplicateCheck();
-  const { location: gpsLocation, isLoading: gpsLoading, error: gpsError } = useGeolocation();
+  const { location: gpsLocation, isLoading: gpsLoading, error: gpsError, requestLocation } = useGeolocation();
+
+  // Request location on mount to preserve existing auto-detect behavior
+  useEffect(() => {
+    requestLocation();
+  }, [requestLocation]);
 
   useEffect(() => {
     if (gpsLocation && !gpsLoading) {
@@ -73,17 +81,23 @@ export const ReportPage = () => {
   const handleSubmit = async () => {
     if (!form.title || !form.category || !form.severity || !form.location) return;
     setIsSubmitting(true);
-    addIssue({
-      id: `issue-${Date.now()}`, title: form.title, description: form.description,
-      category: form.category as IssueCategory, severity: form.severity as IssueSeverity,
-      status: 'reported' as const, location: form.location, address: form.address || 'Location detected',
+    const newIssue = await createIssue({
+      title: form.title,
+      description: form.description,
+      category: form.category as IssueCategory,
+      severity: form.severity as IssueSeverity,
+      location: form.location,
+      address: form.address || 'Location detected',
       localityId: 'custom-locality',
-      photos: form.photos.map((file, i) => ({ id: `photo-${Date.now()}-${i}`, url: URL.createObjectURL(file), thumbnailUrl: URL.createObjectURL(file), uploadedAt: new Date().toISOString(), uploadedBy: 'anonymous', isBefore: true })),
-      reportedBy: null, reportedAt: new Date().toISOString(), resolvedAt: null, updatedAt: new Date().toISOString(),
+      photos: form.photos,
     });
     setIsSubmitting(false);
-    useStore.getState().showToast('Issue reported successfully!', 'success');
-    navigate('/');
+    if (newIssue) {
+      useStore.getState().showToast('Issue reported successfully!', 'success');
+      navigate(`/issue/${newIssue.id}`);
+    } else {
+      useStore.getState().showToast('Failed to report issue. Please try again.', 'error');
+    }
   };
 
   const categories: IssueCategory[] = ['roads', 'garbage', 'water_leakage', 'street_lights', 'sewage', 'encroachment', 'parks', 'public_safety', 'other'];
@@ -186,11 +200,20 @@ export const ReportPage = () => {
 
               <Card>
                 <CardTitle className="mb-3">Location</CardTitle>
-                <input type="text" value={form.address} onChange={(e) => setForm((prev) => ({ ...prev, address: e.target.value }))} placeholder={isDetectingLocation ? 'Detecting...' : 'Enter address'}
+                <input type="text" value={form.address} onChange={(e) => setForm((prev) => ({ ...prev, address: e.target.value, location: prev.location ?? FALLBACK_LOCATION }))} placeholder={isDetectingLocation ? 'Detecting...' : 'Enter address'}
                   className="w-full px-3 py-2 text-sm border border-[var(--border)] bg-[var(--bg-surface)] focus:outline-none focus:border-[var(--text-primary)] transition-colors" style={{ borderRadius: 'var(--radius-sm)' }} />
+                {gpsError && !gpsLoading && (
+                  <button
+                    type="button"
+                    onClick={requestLocation}
+                    className="mt-3 text-xs uppercase tracking-[0.08em] text-[var(--accent)] hover:text-[var(--accent-hover)] font-medium"
+                  >
+                    Retry Location
+                  </button>
+                )}
               </Card>
 
-              <Button className="w-full" size="lg" disabled={!form.title || !form.category || !form.severity} onClick={() => setStep('review')}>Review Report</Button>
+              <Button className="w-full" size="lg" disabled={!form.title || !form.category || !form.severity || !form.location} onClick={() => setStep('review')}>Review Report</Button>
             </div>
           )}
 
