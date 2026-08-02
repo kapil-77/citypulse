@@ -10,7 +10,7 @@ interface CategoryBreakdownProps {
 
 const colorClasses = {
   green: { dot: 'bg-[var(--status-green)]', bar: 'bg-[var(--status-green)]', text: 'text-[var(--status-green)]' },
-  yellow: { dot: 'bg-[var(--status-yellow)]', bar: 'bg-[var(--status-yellow)]', text: 'text-[var(--status-yellow)]' },
+  yellow: { dot: 'bg-[var(--black)]', bar: 'bg-[var(--black)]', text: 'text-[var(--text-primary)]' },
   red: { dot: 'bg-[var(--status-red)]', bar: 'bg-[var(--status-red)]', text: 'text-[var(--status-red)]' },
 };
 
@@ -22,14 +22,14 @@ export const CategoryBreakdown = ({ categories, className = '' }: CategoryBreakd
   }
 
   return (
-    <div className={`space-y-3 ${className}`}>
+    <div className={`space-y-4 ${className}`}>
       {entries.map(([category, health]) => {
         const colors = colorClasses[health.color];
         return (
           <Card key={category} padding="md">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <span className={`w-2 h-2 ${colors.dot}`} style={{ borderRadius: 'var(--radius-sm)' }} />
+                <span className={`w-2 h-2 ${colors.dot}`} />
                 <span className="text-sm font-medium text-[var(--text-primary)]">{ISSUE_CATEGORY_LABELS[category] || category}</span>
               </div>
               <div className="flex items-center gap-1">
@@ -37,7 +37,7 @@ export const CategoryBreakdown = ({ categories, className = '' }: CategoryBreakd
                 <span className="label text-[0.625rem]">/ 100</span>
               </div>
             </div>
-            <div className="w-full h-1.5 bg-[var(--border-light)] overflow-hidden" style={{ borderRadius: 'var(--radius-sm)' }}>
+            <div className="w-full h-1.5 bg-[var(--border-light)]">
               <div className={`h-full transition-all duration-700 ease-out ${colors.bar}`} style={{ width: `${health.score}%` }} />
             </div>
             <div className="flex items-center gap-4 mt-2">

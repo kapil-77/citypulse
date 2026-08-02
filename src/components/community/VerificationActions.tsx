@@ -91,19 +91,19 @@ export const VerificationActions = ({
         </div>
       )}
 
-      <div className="flex flex-wrap gap-2 justify-center mb-3">
-        <Button variant={activeAction === 'confirm' ? 'primary' : 'secondary'} size="sm" onClick={handleConfirm}>
+      <div className="flex flex-wrap gap-3 justify-center mb-4">
+        <Button variant={activeAction === 'confirm' ? 'primary' : 'secondary'} size="md" onClick={handleConfirm}>
           Still Exists
         </Button>
-        <Button variant={activeAction === 'mark_fixed' ? 'primary' : 'secondary'} size="sm" onClick={handleMarkFixed}>
+        <Button variant={activeAction === 'mark_fixed' ? 'primary' : 'secondary'} size="md" onClick={handleMarkFixed}>
           Mark Fixed
         </Button>
         <PhotoUploader onPhotoCapture={handlePhoto}>
-          <Button variant={activeAction === 'photo' ? 'primary' : 'secondary'} size="sm" onClick={() => {}}>
+          <Button variant={activeAction === 'photo' ? 'primary' : 'secondary'} size="md" onClick={() => {}}>
             Add Photo
           </Button>
         </PhotoUploader>
-        <Button variant={showCommentInput ? 'primary' : 'secondary'} size="sm" onClick={() => setShowCommentInput(!showCommentInput)}>
+        <Button variant={showCommentInput ? 'primary' : 'secondary'} size="md" onClick={() => setShowCommentInput(!showCommentInput)}>
           Comment
         </Button>
       </div>

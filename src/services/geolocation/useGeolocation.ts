@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import type { GeoPoint } from '../../types/issue';
 
 interface GeolocationState {
@@ -7,18 +7,24 @@ interface GeolocationState {
   isLoading: boolean;
 }
 
+/**
+ * Geolocation hook that only requests permission when `requestLocation` is called.
+ * Never requests permission automatically on mount.
+ */
 export const useGeolocation = (options?: PositionOptions) => {
   const [state, setState] = useState<GeolocationState>({
     location: null,
     error: null,
-    isLoading: true,
+    isLoading: false,
   });
 
-  useEffect(() => {
+  const requestLocation = useCallback(() => {
     if (!navigator.geolocation) {
       setState({ location: null, error: 'Geolocation not supported', isLoading: false });
       return;
     }
+
+    setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -33,9 +39,9 @@ export const useGeolocation = (options?: PositionOptions) => {
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0, ...options }
     );
-  }, []);
+  }, [options]);
 
-  return state;
+  return { ...state, requestLocation };
 };
 
 // Future: Continuous watch position
@@ -43,14 +49,16 @@ export const useWatchPosition = (options?: PositionOptions) => {
   const [state, setState] = useState<GeolocationState>({
     location: null,
     error: null,
-    isLoading: true,
+    isLoading: false,
   });
 
-  useEffect(() => {
+  const startWatching = useCallback(() => {
     if (!navigator.geolocation) {
       setState({ location: null, error: 'Geolocation not supported', isLoading: false });
-      return;
+      return () => {};
     }
+
+    setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     const watchId = navigator.geolocation.watchPosition(
       (position) => {
@@ -67,7 +75,7 @@ export const useWatchPosition = (options?: PositionOptions) => {
     );
 
     return () => navigator.geolocation.clearWatch(watchId);
-  }, []);
+  }, [options]);
 
-  return state;
+  return { ...state, startWatching };
 };

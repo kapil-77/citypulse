@@ -26,6 +26,7 @@ export interface IssueSlice {
   fetchIssues: () => Promise<void>;
   createIssue: (issue: NewIssue) => Promise<Issue | null>;
   resolveIssue: (id: string) => Promise<void>;
+  getIssueById: (id: string) => Issue | undefined;
 }
 
 export const createIssueSlice: StateCreator<IssueSlice, [], [], IssueSlice> = (set, get) => ({
@@ -61,11 +62,35 @@ export const createIssueSlice: StateCreator<IssueSlice, [], [], IssueSlice> = (s
     // TODO: Connect to API
     set({ isLoading: false });
   },
-  createIssue: async (_issue) => {
-    // TODO: Connect to API
-    return null;
+  createIssue: async (issue) => {
+    const newIssue: Issue = {
+      id: `issue-${Date.now()}`,
+      title: issue.title,
+      description: issue.description,
+      category: issue.category,
+      severity: issue.severity,
+      status: 'reported',
+      location: issue.location,
+      address: issue.address,
+      localityId: issue.localityId,
+      photos: issue.photos.map((file, i) => ({
+        id: `photo-${Date.now()}-${i}`,
+        url: URL.createObjectURL(file),
+        thumbnailUrl: URL.createObjectURL(file),
+        uploadedAt: new Date().toISOString(),
+        uploadedBy: 'anonymous',
+        isBefore: true,
+      })),
+      reportedBy: null,
+      reportedAt: new Date().toISOString(),
+      resolvedAt: null,
+      updatedAt: new Date().toISOString(),
+    };
+    set((state) => ({ issues: [newIssue, ...state.issues] }));
+    return newIssue;
   },
   resolveIssue: async (_id) => {
     // TODO: Connect to API
   },
+  getIssueById: (id) => get().issues.find((i) => i.id === id),
 });

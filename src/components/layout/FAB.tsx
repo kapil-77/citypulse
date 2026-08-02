@@ -7,8 +7,7 @@ export const FAB = () => {
   return (
     <motion.button
       onClick={() => navigate('/report')}
-      className="fixed bottom-8 right-8 z-50 w-12 h-12 bg-[var(--accent)] text-white border border-[var(--accent)] hover:bg-[var(--accent-hover)] flex items-center justify-center"
-      style={{ borderRadius: 'var(--radius)' }}
+      className="fixed bottom-8 right-8 z-50 w-12 h-12 bg-[var(--black)] text-white border border-[var(--black)] hover:bg-[#222] flex items-center justify-center"
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       initial={{ opacity: 0 }}
