@@ -1,5 +1,6 @@
 import type { StateCreator } from 'zustand';
 import type { Issue, NewIssue, IssueCategory, IssueStatus } from '../../types/issue';
+import { apiClient } from '../../services/api/client';
 
 export interface IssueSlice {
   issues: Issue[];
@@ -22,7 +23,7 @@ export interface IssueSlice {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
 
-  // Future: These will be implemented when backend is connected
+  // API-backed actions
   fetchIssues: () => Promise<void>;
   createIssue: (issue: NewIssue) => Promise<Issue | null>;
   resolveIssue: (id: string) => Promise<void>;
@@ -57,40 +58,82 @@ export const createIssueSlice: StateCreator<IssueSlice, [], [], IssueSlice> = (s
   setLoading: (loading) => set({ isLoading: loading }),
   setError: (error) => set({ error }),
 
-  // Future implementations (stubs for now)
   fetchIssues: async () => {
-    // TODO: Connect to API
-    set({ isLoading: false });
+    set({ isLoading: true, error: null });
+    try {
+      const res = await apiClient.get<Issue[]>('/issues');
+      if (res.error) {
+        set({ error: res.error, isLoading: false });
+        return;
+      }
+      set({ issues: res.data, isLoading: false });
+    } catch (err) {
+      set({ error: (err as Error).message, isLoading: false });
+    }
   },
+
   createIssue: async (issue) => {
-    const newIssue: Issue = {
-      id: `issue-${Date.now()}`,
-      title: issue.title,
-      description: issue.description,
-      category: issue.category,
-      severity: issue.severity,
-      status: 'reported',
-      location: issue.location,
-      address: issue.address,
-      localityId: issue.localityId,
-      photos: issue.photos.map((file, i) => ({
-        id: `photo-${Date.now()}-${i}`,
-        url: URL.createObjectURL(file),
-        thumbnailUrl: URL.createObjectURL(file),
-        uploadedAt: new Date().toISOString(),
-        uploadedBy: 'anonymous',
-        isBefore: true,
-      })),
-      reportedBy: null,
-      reportedAt: new Date().toISOString(),
-      resolvedAt: null,
-      updatedAt: new Date().toISOString(),
-    };
-    set((state) => ({ issues: [newIssue, ...state.issues] }));
-    return newIssue;
+    try {
+      // Upload photo files to the server first so they persist on disk
+      let photos: Issue['photos'] = [];
+      if (issue.photos.length > 0) {
+        const formData = new FormData();
+        for (const file of issue.photos) {
+          formData.append('photos', file);
+        }
+        formData.append('uploadedBy', 'anonymous');
+        formData.append('isBefore', 'true');
+
+        const uploadRes = await apiClient.upload<{ photos: Issue['photos'] }>('/uploads', formData);
+        if (uploadRes.error) {
+          set({ error: `Photo upload failed: ${uploadRes.error}` });
+          return null;
+        }
+        photos = uploadRes.data.photos;
+      }
+
+      const payload = {
+        title: issue.title,
+        description: issue.description,
+        category: issue.category,
+        severity: issue.severity,
+        location: issue.location,
+        address: issue.address,
+        localityId: issue.localityId,
+        photos,
+        reportedAt: new Date().toISOString(),
+      };
+
+      const res = await apiClient.post<Issue>('/issues', payload);
+      if (res.error) {
+        set({ error: res.error });
+        return null;
+      }
+      const newIssue = res.data;
+      set((state) => ({ issues: [newIssue, ...state.issues] }));
+      return newIssue;
+    } catch (err) {
+      set({ error: (err as Error).message });
+      return null;
+    }
   },
-  resolveIssue: async (_id) => {
-    // TODO: Connect to API
+
+  resolveIssue: async (id) => {
+    try {
+      const res = await apiClient.patch<Issue>(`/issues/${id}`, { status: 'resolved', resolvedAt: new Date().toISOString() });
+      if (res.error) {
+        set({ error: res.error });
+        return;
+      }
+      const updated = res.data;
+      set((state) => ({
+        issues: state.issues.map((i) => (i.id === id ? updated : i)),
+        selectedIssue: state.selectedIssue?.id === id ? updated : state.selectedIssue,
+      }));
+    } catch (err) {
+      set({ error: (err as Error).message });
+    }
   },
+
   getIssueById: (id) => get().issues.find((i) => i.id === id),
 });

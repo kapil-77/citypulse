@@ -1,33 +1,50 @@
 import type { StateCreator } from 'zustand';
 import type { HealthScoreResult } from '../../types/health';
+import { apiClient } from '../../services/api/client';
 
 /**
- * FUTURE FEATURE: Area Health Score Slice
- * This slice is a stub ready for Phase 8 implementation.
+ * Health Score Slice — fetches city/state-wise health scores from the backend.
  */
 
 export interface HealthSlice {
-  scores: Record<string, HealthScoreResult>; // keyed by localityId
+  scores: Record<string, HealthScoreResult>; // keyed by location name
   isLoading: boolean;
   error: string | null;
 
-  fetchHealthScore: (localityId: string) => Promise<void>;
-  setHealthScore: (localityId: string, score: HealthScoreResult) => void;
+  fetchHealthScore: (location: string) => Promise<void>;
+  setHealthScore: (location: string, score: HealthScoreResult) => void;
   clearScores: () => void;
+  getHealthScore: (location: string) => HealthScoreResult | undefined;
 }
 
-export const createHealthSlice: StateCreator<HealthSlice, [], [], HealthSlice> = (set) => ({
+export const createHealthSlice: StateCreator<HealthSlice, [], [], HealthSlice> = (set, get) => ({
   scores: {},
   isLoading: false,
   error: null,
 
-  fetchHealthScore: async (_localityId: string) => {
-    // TODO: Implement when Health Score feature is built (Phase 8)
-    set({ isLoading: false });
+  fetchHealthScore: async (location: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const res = await apiClient.get<HealthScoreResult>(`/health/${encodeURIComponent(location)}`);
+      if (res.error) {
+        set({ error: res.error, isLoading: false });
+        return;
+      }
+      set((state) => ({
+        scores: { ...state.scores, [location]: res.data },
+        isLoading: false,
+      }));
+    } catch (err) {
+      set({ error: (err as Error).message, isLoading: false });
+    }
   },
-  setHealthScore: (localityId, score) =>
+
+  setHealthScore: (location, score) =>
     set((state) => ({
-      scores: { ...state.scores, [localityId]: score },
+      scores: { ...state.scores, [location]: score },
     })),
+
   clearScores: () => set({ scores: {} }),
+
+  getHealthScore: (location) => get().scores[location],
 });

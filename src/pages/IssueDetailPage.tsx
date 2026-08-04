@@ -137,7 +137,7 @@ export const IssueDetailPage = () => {
 
           {id && (
             <>
-              <VerificationActions issueId={id} onConfirm={addConfirm} onMarkFixed={addMarkFixed} onPhotoUpload={(i, f) => addPhoto(i, URL.createObjectURL(f))} onComment={addComment}
+              <VerificationActions issueId={id} onConfirm={addConfirm} onMarkFixed={addMarkFixed} onPhotoUpload={(i, f) => addPhoto(i, f)} onComment={addComment}
                 stats={verification ? { confirmsExisting: verification.confirmsExisting, marksFixed: verification.marksFixed, communityPhotos: verification.communityPhotos.length, updates: verification.updates.length } : undefined} />
               {verification && verification.updates.length > 0 && <CommunityFeed updates={verification.updates} />}
             </>

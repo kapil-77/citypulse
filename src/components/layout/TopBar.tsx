@@ -26,7 +26,7 @@ export const TopBar = ({ title = 'CityPulse', showBack = false, rightAction, cla
                 </svg>
               </button>
             )}
-            <h1 className="font-serif text-xl font-bold text-white tracking-tight">{title}</h1>
+            <h1 className="font-serif text-xl font-bold tracking-tight" style={{ color: 'var(--text-muted)' }}>{title}</h1>
           </div>
           {rightAction && <div className="flex items-center gap-3">{rightAction}</div>}
         </div>

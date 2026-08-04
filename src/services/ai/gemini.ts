@@ -1,5 +1,4 @@
 /**
- * Gemini Vision Service — Phase 3 Implementation
  *
  * Uses the Gemini 2.0 Flash (or 1.5 Pro) API for:
  * - Image analysis → category suggestion, severity estimation, description

@@ -16,22 +16,22 @@ export const AnimatedNumber = ({
   prefix = '',
 }: AnimatedNumberProps) => {
   const [displayValue, setDisplayValue] = useState(0);
-  const startTime = useRef<number | null>(null);
-  const startValue = useRef(0);
-  const frameRef = useRef<number>();
+  const startTimeRef = useRef<number | null>(null);
+  const startValueRef = useRef(0);
+  const frameRef = useRef<number | null>(null);
 
   useEffect(() => {
-    startValue.current = displayValue;
-    startTime.current = null;
+    startValueRef.current = displayValue;
+    startTimeRef.current = null;
 
     const animate = (timestamp: number) => {
-      if (!startTime.current) startTime.current = timestamp;
-      const elapsed = timestamp - startTime.current;
+      if (startTimeRef.current === null) startTimeRef.current = timestamp;
+      const elapsed = timestamp - startTimeRef.current;
       const progress = Math.min(elapsed / duration, 1);
 
       // Ease out cubic
       const eased = 1 - Math.pow(1 - progress, 3);
-      const current = Math.round(startValue.current + (value - startValue.current) * eased);
+      const current = Math.round(startValueRef.current + (value - startValueRef.current) * eased);
 
       setDisplayValue(current);
 
@@ -43,7 +43,8 @@ export const AnimatedNumber = ({
     frameRef.current = requestAnimationFrame(animate);
 
     return () => {
-      if (frameRef.current !== undefined) cancelAnimationFrame(frameRef.current);
+      if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
+      frameRef.current = null;
     };
   }, [value, duration]);
 

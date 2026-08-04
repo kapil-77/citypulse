@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Server uploads (user-submitted images)
+server/uploads/
+server/data/db.json
+
 # Editor directories and files
 .vscode/*
 .env
