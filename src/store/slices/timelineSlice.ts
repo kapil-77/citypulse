@@ -1,10 +1,9 @@
 import type { StateCreator } from 'zustand';
 import type { TimelineEvent } from '../../types/issue';
+import { apiClient } from '../../services/api/client';
 
 /**
- * FUTURE FEATURE: Timeline Slice
- * This slice is a stub ready for Phase 5 implementation.
- * The schema and state shape are fully defined so components can be built against it.
+ * Timeline Slice — fetches timeline events from the backend.
  */
 
 export interface TimelineSlice {
@@ -12,7 +11,6 @@ export interface TimelineSlice {
   isLoading: boolean;
   error: string | null;
 
-  // Stub actions — implement when backend is ready
   fetchTimeline: (issueId: string) => Promise<void>;
   addEvent: (issueId: string, event: TimelineEvent) => void;
   clearTimeline: (issueId: string) => void;
@@ -23,10 +21,23 @@ export const createTimelineSlice: StateCreator<TimelineSlice, [], [], TimelineSl
   isLoading: false,
   error: null,
 
-  fetchTimeline: async (_issueId: string) => {
-    // TODO: Implement when Timeline feature is built (Phase 5)
-    set({ isLoading: false });
+  fetchTimeline: async (issueId: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const res = await apiClient.get<TimelineEvent[]>(`/timeline/${issueId}`);
+      if (res.error) {
+        set({ error: res.error, isLoading: false });
+        return;
+      }
+      set((state) => ({
+        events: { ...state.events, [issueId]: res.data },
+        isLoading: false,
+      }));
+    } catch (err) {
+      set({ error: (err as Error).message, isLoading: false });
+    }
   },
+
   addEvent: (issueId, event) =>
     set((state) => ({
       events: {
@@ -34,6 +45,7 @@ export const createTimelineSlice: StateCreator<TimelineSlice, [], [], TimelineSl
         [issueId]: [...(state.events[issueId] || []), event],
       },
     })),
+
   clearTimeline: (issueId) =>
     set((state) => {
       const { [issueId]: _, ...rest } = state.events;

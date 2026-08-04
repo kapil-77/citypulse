@@ -1,48 +1,70 @@
 /**
- * API Client — stub ready for real backend integration.
- * 
- * Currently returns mock data. When a backend is connected,
- * replace these functions with actual fetch/axios calls.
+ * API Client — Real HTTP implementation using fetch.
+ * Connects to the CityPulse Express backend.
  */
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
-interface ApiResponse<T> {
+export interface ApiResponse<T> {
   data: T;
   error: string | null;
   status: number;
 }
 
-class ApiClient {
-  private baseUrl: string;
+async function request<T>(
+  method: 'GET' | 'POST' | 'PATCH' | 'DELETE',
+  path: string,
+  body?: unknown,
+  isFormData = false
+): Promise<ApiResponse<T>> {
+  try {
+    const res = await fetch(`${BASE_URL}${path}`, {
+      method,
+      headers: body !== undefined && !isFormData ? { 'Content-Type': 'application/json' } : undefined,
+      body: body !== undefined ? (isFormData ? (body as FormData) : JSON.stringify(body)) : undefined,
+    });
 
-  constructor(baseUrl: string) {
-    this.baseUrl = baseUrl;
-  }
+    if (res.status === 204) {
+      return { data: null as T, error: null, status: res.status };
+    }
 
-  async get<T>(path: string): Promise<ApiResponse<T>> {
-    // TODO: Replace with actual fetch
-    console.log(`[API] GET ${this.baseUrl}${path}`);
-    return { data: null as T, error: null, status: 200 };
-  }
+    const data = await res.json();
 
-  async post<T>(path: string, body: unknown): Promise<ApiResponse<T>> {
-    // TODO: Replace with actual fetch
-    console.log(`[API] POST ${this.baseUrl}${path}`, body);
-    return { data: null as T, error: null, status: 201 };
-  }
+    if (!res.ok) {
+      return { data: null as T, error: data?.error || `Request failed with status ${res.status}`, status: res.status };
+    }
 
-  async patch<T>(path: string, body: unknown): Promise<ApiResponse<T>> {
-    // TODO: Replace with actual fetch
-    console.log(`[API] PATCH ${this.baseUrl}${path}`, body);
-    return { data: null as T, error: null, status: 200 };
-  }
-
-  async delete<T>(path: string): Promise<ApiResponse<T>> {
-    // TODO: Replace with actual fetch
-    console.log(`[API] DELETE ${this.baseUrl}${path}`);
-    return { data: null as T, error: null, status: 200 };
+    return { data: data as T, error: null, status: res.status };
+  } catch (err) {
+    return {
+      data: null as T,
+      error: (err as Error).message || 'Network error',
+      status: 0,
+    };
   }
 }
 
-export const apiClient = new ApiClient(BASE_URL);
+class ApiClient {
+  constructor() {}
+  async get<T>(path: string): Promise<ApiResponse<T>> {
+    return request<T>('GET', path);
+  }
+
+  async post<T>(path: string, body: unknown): Promise<ApiResponse<T>> {
+    return request<T>('POST', path, body);
+  }
+
+  async upload<T>(path: string, formData: FormData): Promise<ApiResponse<T>> {
+    return request<T>('POST', path, formData, true);
+  }
+
+  async patch<T>(path: string, body: unknown): Promise<ApiResponse<T>> {
+    return request<T>('PATCH', path, body);
+  }
+
+  async delete<T>(path: string): Promise<ApiResponse<T>> {
+    return request<T>('DELETE', path);
+  }
+}
+
+export const apiClient = new ApiClient();

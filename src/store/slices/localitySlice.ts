@@ -1,5 +1,6 @@
 import type { StateCreator } from 'zustand';
 import type { Locality } from '../../types/locality';
+import { apiClient } from '../../services/api/client';
 
 export interface LocalitySlice {
   localities: Locality[];
@@ -22,8 +23,18 @@ export const createLocalitySlice: StateCreator<LocalitySlice, [], [], LocalitySl
   addLocality: (locality) => set((state) => ({ localities: [...state.localities, locality] })),
   selectLocality: (locality) => set({ selectedLocality: locality }),
   setLoading: (loading) => set({ isLoading: loading }),
+
   fetchLocalities: async () => {
-    // TODO: Connect to API
-    set({ isLoading: false });
+    set({ isLoading: true });
+    try {
+      const res = await apiClient.get<Locality[]>('/localities');
+      if (res.error) {
+        set({ isLoading: false });
+        return;
+      }
+      set({ localities: res.data, isLoading: false });
+    } catch (err) {
+      set({ isLoading: false });
+    }
   },
 });

@@ -1,31 +1,39 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TopBar } from '../components/layout/TopBar';
 import { Card, CardTitle, CardDescription } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { HealthScoreGauge } from '../components/locality/HealthScoreGauge';
 import { CategoryBreakdown } from '../components/locality/CategoryBreakdown';
-import { useIssues, useSelectedLocation } from '../store';
-import { computeHealthInputFromIssues, calculateHealthScore } from '../features/health/scoreEngine';
+import { useStore, useSelectedLocation, useIssues } from '../store';
 
 export const LocalityPage = () => {
   const navigate = useNavigate();
   const issues = useIssues();
   const selectedLocation = useSelectedLocation();
+  const scores = useStore((s) => s.scores);
+  const fetchHealthScore = useStore((s) => s.fetchHealthScore);
 
-  // Filter issues by the selected city/state (match city/state name in issue address)
+  const locationKey = selectedLocation ? selectedLocation.name : 'ALL INDIA';
+
+  // Fetch health score from the backend when location changes
+  useEffect(() => {
+    void fetchHealthScore(locationKey);
+  }, [locationKey, fetchHealthScore]);
+
+  const healthResult = scores[locationKey];
+
+  // Filter issues by selected location for stats
   const locationIssues = useMemo(() => {
     if (!selectedLocation) return issues;
     const name = selectedLocation.name.toLowerCase();
     const state = selectedLocation.state.toLowerCase();
-
     return issues.filter((issue) => {
       const address = issue.address.toLowerCase();
       return address.includes(name) || address.includes(state);
     });
   }, [issues, selectedLocation]);
 
-  const healthResult = useMemo(() => calculateHealthScore(computeHealthInputFromIssues(locationIssues)), [locationIssues]);
   const stats = useMemo(() => {
     const total = locationIssues.length;
     const unresolved = locationIssues.filter((i) => i.status !== 'resolved' && i.status !== 'verified_resolved').length;
@@ -47,7 +55,11 @@ export const LocalityPage = () => {
           <Card padding="lg" className="text-center">
             <p className="label mb-2">City Health</p>
             <h2 className="font-serif text-xl md:text-2xl font-bold mb-6">{locationLabel}</h2>
-            <HealthScoreGauge score={healthResult.overall} trend={healthResult.trend} size="lg" />
+            {healthResult ? (
+              <HealthScoreGauge score={healthResult.overall} trend={healthResult.trend} size="lg" />
+            ) : (
+              <div className="py-8 text-sm text-[var(--text-muted)]">Loading health score...</div>
+            )}
             <p className="text-xs text-[var(--text-muted)] mt-4">Based on {stats.total} reported issue{stats.total !== 1 ? 's' : ''} in {locationLabel}</p>
           </Card>
 
@@ -68,7 +80,7 @@ export const LocalityPage = () => {
 
           <div>
             <h2 className="font-serif text-lg font-bold mb-4">Category Breakdown</h2>
-            <CategoryBreakdown categories={healthResult.categories} />
+            <CategoryBreakdown categories={healthResult?.categories || {}} />
           </div>
 
           <Card padding="lg" className="text-center">
