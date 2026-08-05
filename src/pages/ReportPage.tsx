@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TopBar } from '../components/layout/TopBar';
 import { Button } from '../components/ui/Button';
@@ -38,6 +38,25 @@ export const ReportPage = () => {
   const [isAnalyzingImage, setIsAnalyzingImage] = useState(false);
   const [showDuplicates, setShowDuplicates] = useState(false);
 
+  // Cache of file -> object URL so each photo only gets ONE preview URL (no leaks)
+  const previewUrlsRef = useRef<Map<File, string>>(new Map());
+  const createPreviewUrl = useCallback((file: File) => {
+    const cached = previewUrlsRef.current.get(file);
+    if (cached) return cached;
+    const url = URL.createObjectURL(file);
+    previewUrlsRef.current.set(file, url);
+    return url;
+  }, []);
+
+  // Revoke all preview object URLs when the component unmounts to prevent memory leaks
+  useEffect(() => {
+    const urls = previewUrlsRef.current;
+    return () => {
+      urls.forEach((url) => URL.revokeObjectURL(url));
+      urls.clear();
+    };
+  }, []);
+
   const { isChecking: isCheckingDuplicates, duplicates, hasChecked: hasCheckedDuplicates, checkForDuplicates, reset: resetDuplicates } = useDuplicateCheck();
   const { location: gpsLocation, isLoading: gpsLoading, error: gpsError, requestLocation } = useGeolocation();
 
@@ -63,7 +82,16 @@ export const ReportPage = () => {
         const { geminiService } = await import('../services/ai/gemini');
         if (geminiService.isConfigured()) {
           const result = await geminiService.analyzeImage(file);
-          if (result) setForm((prev) => ({ ...prev, category: result.suggestedCategory, severity: result.severity, title: result.suggestedTitle || prev.title, description: result.description || prev.description }));
+          if (result) {
+            setForm((prev) => ({
+              ...prev,
+              category: result.suggestedCategory,
+              severity: result.severity,
+              title: result.suggestedTitle || prev.title,
+              // Only use AI-generated description if the user hasn't typed their own
+              description: !prev.description && !result.description.startsWith('Could not analyze') ? result.description : prev.description,
+            }));
+          }
         }
       } catch { /* AI unavailable */ }
       finally { setIsAnalyzingImage(false); }
@@ -76,7 +104,20 @@ export const ReportPage = () => {
     }
   }, [step, form.photos.length, form.location, hasCheckedDuplicates]);
 
-  const handleRemovePhoto = (index: number) => setForm((prev) => ({ ...prev, photos: prev.photos.filter((_, i) => i !== index) }));
+  const handleRemovePhoto = useCallback((index: number) => {
+    setForm((prev) => {
+      const removed = prev.photos[index];
+      if (removed) {
+        // Revoke and remove the cached preview URL for this photo
+        const url = previewUrlsRef.current.get(removed);
+        if (url) {
+          URL.revokeObjectURL(url);
+          previewUrlsRef.current.delete(removed);
+        }
+      }
+      return { ...prev, photos: prev.photos.filter((_, i) => i !== index) };
+    });
+  }, []);
 
   const handleSubmit = async () => {
     if (!form.title || !form.category || !form.severity || !form.location) return;
@@ -137,7 +178,7 @@ export const ReportPage = () => {
                 <div className="grid grid-cols-3 gap-2">
                   {form.photos.map((photo, i) => (
                     <div key={i} className="relative aspect-square border border-[var(--border)] bg-[var(--bg-muted)] overflow-hidden" style={{ borderRadius: 'var(--radius-sm)' }}>
-                      <img src={URL.createObjectURL(photo)} alt="" className="w-full h-full object-cover" />
+                      <img src={createPreviewUrl(photo)} alt="" className="w-full h-full object-cover" />
                       <button onClick={() => handleRemovePhoto(i)} className="absolute top-1 right-1 w-5 h-5 bg-[var(--bg-surface)] border border-[var(--border)] flex items-center justify-center text-[10px]" style={{ borderRadius: 'var(--radius-sm)' }}>✕</button>
                     </div>
                   ))}
@@ -222,7 +263,7 @@ export const ReportPage = () => {
             <div className="space-y-5">
               <Card padding="lg">
                 <CardTitle className="mb-4">Review & Submit</CardTitle>
-                {form.photos[0] && <div className="aspect-video border border-[var(--border)] bg-[var(--bg-muted)] mb-4 overflow-hidden" style={{ borderRadius: 'var(--radius-sm)' }}><img src={URL.createObjectURL(form.photos[0])} alt="" className="w-full h-full object-cover" /></div>}
+                {form.photos[0] && <div className="aspect-video border border-[var(--border)] bg-[var(--bg-muted)] mb-4 overflow-hidden" style={{ borderRadius: 'var(--radius-sm)' }}><img src={createPreviewUrl(form.photos[0])} alt="" className="w-full h-full object-cover" /></div>}
                 <div className="space-y-4">
                   <div><span className="label">Title</span><p className="text-sm font-medium text-[var(--text-primary)] mt-0.5">{form.title}</p></div>
                   {form.description && <div><span className="label">Description</span><p className="text-sm text-[var(--text-secondary)] mt-0.5">{form.description}</p></div>}

@@ -20,7 +20,7 @@ export const PhotoGallery = ({ photos, title }: PhotoGalleryProps) => {
   return (
     <div className="relative bg-[var(--bg-muted)] border-b border-[var(--black)]">
       <div className="container">
-        <div className="relative aspect-[16/9] md:aspect-[21/9]">
+        <div className="relative aspect-[2/1] md:aspect-[3/1]">
           <img src={photos[activeIndex].url} alt={`${title} — Photo ${activeIndex + 1}`} className="w-full h-full object-cover" />
 
           {photos.length > 1 && (
