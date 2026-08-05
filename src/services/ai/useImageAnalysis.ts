@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
 import { geminiService, type ImageAnalysis } from './gemini';
-import type { IssueCategory, IssueSeverity } from '../../types/issue';
 
 interface AnalysisState {
   isAnalyzing: boolean;

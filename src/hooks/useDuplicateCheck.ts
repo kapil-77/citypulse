@@ -41,45 +41,54 @@ export const useDuplicateCheck = () => {
     setState((prev) => ({ ...prev, isChecking: true, error: null }));
 
     try {
-      // Run synchronous strategies first
-      const results = await duplicateEngine.findDuplicates(newIssue, existingIssues, threshold);
-      
-      // If we have results and the new issue has a photo, try AI comparison for top candidates
+      // Use a low candidate threshold so visually-similar issues that don't match
+      // on GPS/category/title still get a chance to be surfaced by AI comparison.
+      const candidateThreshold = newIssue.photos.length > 0 ? 0.1 : threshold;
+      const results = await duplicateEngine.findDuplicates(newIssue, existingIssues, candidateThreshold);
+
+      // If the new issue has a photo, run AI visual comparison on the top candidates.
+      // This both catches visual duplicates AND boosts their scores above threshold.
       if (newIssue.photos.length > 0 && results.length > 0) {
-        const topResults = results.slice(0, 3); // Check top 3
-        
+        const topResults = results.slice(0, 5); // Check top 5 candidates
+
         for (const result of topResults) {
-          if (result.existingIssue.photos.length > 0) {
-            const aiScore = await compareWithAi(
-              newIssue.photos[0],
-              result.existingIssue.photos[0].thumbnailUrl
+          const existingPhotoUrl =
+            result.existingIssue.photos[0]?.url ||
+            result.existingIssue.photos[0]?.thumbnailUrl;
+          if (!existingPhotoUrl) continue;
+
+          const aiScore = await compareWithAi(newIssue.photos[0], existingPhotoUrl);
+
+          if (aiScore > 0) {
+            // Blend AI score into the result (50/50 so a strong visual match
+            // can surface a duplicate that missed the sync threshold).
+            const blendedScore = Math.round(
+              result.similarityScore * 0.5 + aiScore * 100 * 0.5
             );
-            
-            if (aiScore > 0) {
-              // Blend AI score into the result
-              const blendedScore = Math.round(
-                (result.similarityScore * 0.7 + aiScore * 100 * 0.3)
-              );
-              result.similarityScore = Math.min(100, blendedScore);
-              if (aiScore > 0.5) {
-                result.matchedStrategies.push('AI Visual Match');
-              }
+            result.similarityScore = Math.min(100, blendedScore);
+            if (aiScore > 0.5) {
+              result.matchedStrategies.push('AI Visual Match');
             }
           }
         }
-        
+
         // Re-sort after AI scores
         results.sort((a, b) => b.similarityScore - a.similarityScore);
       }
 
+      // Only surface candidates that meet the actual threshold after AI blending
+      const finalResults = results.filter(
+        (r) => r.similarityScore >= threshold * 100
+      );
+
       setState({
         isChecking: false,
-        duplicates: results,
+        duplicates: finalResults,
         error: null,
         hasChecked: true,
       });
 
-      return results;
+      return finalResults;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Duplicate check failed';
       setState({ isChecking: false, duplicates: [], error: message, hasChecked: true });

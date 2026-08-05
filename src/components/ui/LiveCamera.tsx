@@ -37,7 +37,7 @@ export const LiveCamera = ({ onCapture, onClose, className = '' }: LiveCameraPro
 
       setIsActive(true);
       setError(null);
-    } catch (err) {
+    } catch {
       setError('Camera access denied. Please allow camera permissions.');
       setIsActive(false);
     }

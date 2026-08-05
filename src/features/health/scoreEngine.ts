@@ -17,18 +17,6 @@ const SEVERITY_WEIGHTS: Record<IssueSeverity, number> = {
   critical: 8,
 };
 
-const CATEGORY_DEFAULT_COLORS: Record<string, 'green' | 'yellow' | 'red'> = {
-  roads: 'green',
-  garbage: 'yellow',
-  water_leakage: 'red',
-  street_lights: 'green',
-  sewage: 'red',
-  encroachment: 'yellow',
-  parks: 'green',
-  public_safety: 'red',
-  other: 'yellow',
-};
-
 export function getCategoryColor(score: number): 'green' | 'yellow' | 'red' {
   if (score >= 70) return 'green';
   if (score >= 40) return 'yellow';
@@ -39,7 +27,6 @@ export function getCategoryColor(score: number): 'green' | 'yellow' | 'red' {
  * Calculate per-category health score
  */
 function calculateCategoryScore(
-  unresolvedCount: number,
   severityDistribution: Record<string, number>,
   communityConfirmations: number,
   avgResolutionTime: number
@@ -80,11 +67,9 @@ function determineTrend(current: number, previous?: number): 'improving' | 'stab
  */
 export function calculateHealthScore(input: HealthScoreInput): HealthScoreResult {
   const {
-    unresolvedCount,
     severityDistribution,
     communityConfirmations,
     avgResolutionTime,
-    totalIssues,
     previousOverall,
     categoryInputs,
   } = input;
@@ -116,7 +101,6 @@ export function calculateHealthScore(input: HealthScoreInput): HealthScoreResult
   if (categoryInputs) {
     for (const [category, catInput] of Object.entries(categoryInputs)) {
       const catScore = calculateCategoryScore(
-        catInput.unresolvedCount,
         catInput.severityDistribution,
         catInput.communityConfirmations,
         catInput.avgResolutionTime

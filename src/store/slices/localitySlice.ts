@@ -33,7 +33,7 @@ export const createLocalitySlice: StateCreator<LocalitySlice, [], [], LocalitySl
         return;
       }
       set({ localities: res.data, isLoading: false });
-    } catch (err) {
+    } catch {
       set({ isLoading: false });
     }
   },
