@@ -1,27 +1,14 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-import { mkdirSync } from 'fs';
+import {
+  uploadMultipleToCloudinary,
+  deleteMultipleFromCloudinary,
+} from '../services/uploadService.js';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const UPLOAD_DIR = join(__dirname, '..', 'uploads');
-
-// Ensure upload directory exists
-mkdirSync(UPLOAD_DIR, { recursive: true });
-
-// Configure multer storage
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
-  filename: (_req, file, cb) => {
-    const ext = file.originalname.split('.').pop() || 'jpg';
-    const safeExt = ext.replace(/[^a-zA-Z0-9]/g, '').slice(0, 10) || 'jpg';
-    cb(null, `photo-${Date.now()}-${Math.round(Math.random() * 1e9)}.${safeExt}`);
-  },
-});
-
+// Use memory storage — files are buffered in memory and streamed to Cloudinary.
+// This avoids writing any temporary files to disk.
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB per file
   fileFilter: (_req, file, cb) => {
     const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif'];
@@ -36,12 +23,12 @@ const upload = multer({
 const router = Router();
 
 /**
- * POST /api/uploads — Upload one or more images
+ * POST /api/uploads — Upload one or more images to Cloudinary
  * Expects multipart/form-data with field name "photos" (can be multiple files)
- * Returns an array of photo objects with server URLs.
+ * Returns an array of photo objects with Cloudinary URLs.
  */
 router.post('/', (req, res) => {
-  upload.array('photos', 10)(req, res, (err) => {
+  upload.array('photos', 10)(req, res, async (err) => {
     if (err) {
       if (err.code === 'LIMIT_FILE_SIZE') {
         return res.status(413).json({ error: 'File too large. Maximum size is 10MB per image.' });
@@ -57,19 +44,37 @@ router.post('/', (req, res) => {
       return res.status(400).json({ error: 'No files uploaded. Use field name "photos".' });
     }
 
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
-    const now = new Date().toISOString();
+    let uploadedPhotos = [];
+    try {
+      const uploadedAt = new Date().toISOString();
+      const uploadedBy = req.body?.uploadedBy || 'anonymous';
+      const isBefore = req.body?.isBefore === 'false' ? false : true;
 
-    const photos = files.map((file, i) => ({
-      id: `photo-${Date.now()}-${i}`,
-      url: `${baseUrl}/uploads/${file.filename}`,
-      thumbnailUrl: `${baseUrl}/uploads/${file.filename}`,
-      uploadedAt: now,
-      uploadedBy: req.body?.uploadedBy || 'anonymous',
-      isBefore: req.body?.isBefore === 'false' ? false : true,
-    }));
+      // Upload all files to Cloudinary
+      const buffers = files.map((file) => file.buffer);
+      uploadedPhotos = await uploadMultipleToCloudinary(buffers, {
+        uploadedBy,
+        isBefore,
+      });
 
-    res.status(201).json({ photos });
+      // Build the response photo objects
+      const photos = uploadedPhotos.map((photo) => ({
+        ...photo,
+        uploadedAt,
+      }));
+
+      res.status(201).json({ photos });
+    } catch (uploadErr) {
+      // Rollback: if any upload failed, delete all successfully-uploaded images
+      console.error('[Uploads] Cloudinary upload failed:', uploadErr.message);
+      const publicIds = uploadedPhotos
+        .filter((p) => p && p.public_id)
+        .map((p) => p.public_id);
+      if (publicIds.length > 0) {
+        await deleteMultipleFromCloudinary(publicIds);
+      }
+      res.status(500).json({ error: 'Image upload failed. Please try again.' });
+    }
   });
 });
 

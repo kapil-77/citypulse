@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Mouse+Memoirs&family=Special+Elite&display=swap');
 @import "tailwindcss";
 
 /* ═══════════════════════════════════════════════
@@ -11,20 +12,22 @@
 
 /* ── Design Tokens ──────────────────────────── */
 :root {
-  --bg-page: #f6f3ef;
+  --bg-page: #a7a3a0;
   --bg-surface: #ffffff;
   --bg-muted: #f0ece6;
   --bg-hover: #e8e2d9;
 
   --text-primary: #111111;
-  --text-secondary: #666666;
-  --text-muted: #999999;
+  --text-secondary: #2a2626;
+  --text-muted: #938f8f;
   --text-inverse: #ffffff;
 
   --black: #0a0a0a;
 
   --accent: #a33a2e;
   --accent-hover: #8a2e24;
+  --stamp: #f0ece6;
+  --bg: #0a0a0a;
 
   --status-green: #2e7d5b;
   --status-red: #a33a2e;
@@ -36,6 +39,8 @@
 
   --font-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  --font-display: 'Mouse Memoirs', Impact, 'Arial Black', sans-serif;
+  --font-stamp: 'Special Elite', 'Courier Prime', 'Courier New', monospace;
 
   --container-width: calc(100% - 64px);
   --container-max: 1120px;
@@ -74,27 +79,51 @@ body {
 }
 
 /* ── Typography ─────────────────────────────── */
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-serif);
-  font-weight: 700;
-  line-height: 1.25;
-  color: var(--text-primary);
+.font-display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0.02em;
 }
 
-h1 { font-size: 2.25rem; letter-spacing: -0.02em; }
-h2 { font-size: 1.75rem; }
-h3 { font-size: 1.375rem; }
-h4 { font-size: 1.125rem; }
+.stamp {
+  font-family: var(--font-stamp);
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--bg);
+  background: var(--stamp);
+  border: 1.5px solid var(--bg);
+  padding: 0.22rem 0.65rem 0.18rem;
+  transform: rotate(-1.5deg);
+  box-shadow: 2px 2px #00000059;
+  display: inline-block;
+}
+
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--text-primary);
+  }
+
+  h1 { font-size: 2.25rem; letter-spacing: -0.02em; }
+  h2 { font-size: 1.75rem; }
+  h3 { font-size: 1.375rem; }
+  h4 { font-size: 1.125rem; }
+}
 
 p { line-height: 1.7; }
 
-.label {
-  font-family: var(--font-sans);
-  font-size: 0.6875rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--text-muted);
+@layer base {
+  .label {
+    font-family: var(--font-sans);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+  }
 }
 
 /* ── Layout ─────────────────────────────────── */
@@ -253,4 +282,23 @@ img, video, canvas {
 
   h1 { font-size: 1.5rem; }
   h2 { font-size: 1.25rem; }
+}
+
+/* ── Animations ─────────────────────────────── */
+@keyframes photo-fade {
+  from { opacity: 0; transform: scale(1.05); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-photo-fade {
+  animation: photo-fade 0.5s ease-out;
+}
+
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.4s ease-out;
 }

@@ -154,7 +154,7 @@ export const ReportPage = () => {
           <div className="flex items-center gap-3 mb-2">
             {['photo', 'details', 'review'].map((s, i) => (
               <div key={s} className="flex items-center gap-3">
-                <div className={`w-6 h-6 flex items-center justify-center text-[10px] font-bold uppercase tracking-wider border ${step === s ? 'bg-[var(--text-primary)] text-[var(--bg-surface)] border-[var(--text-primary)]' : 'bg-[var(--bg-surface)] text-[var(--text-muted)] border-[var(--border)]'}`} style={{ borderRadius: 'var(--radius-sm)' }}>{i + 1}</div>
+                <div className={`stamp ${step === s ? 'bg-[var(--text-primary)] text-[var(--bg-surface)]' : ''}`}>{i + 1}</div>
                 {i < 2 && <div className={`w-6 h-px ${['photo', 'details', 'review'].indexOf(step) > i ? 'bg-[var(--text-primary)]' : 'bg-[var(--border)]'}`} />}
               </div>
             ))}
@@ -261,22 +261,39 @@ export const ReportPage = () => {
           {/* Step 3: Review */}
           {step === 'review' && (
             <div className="space-y-5">
-              <Card padding="lg">
-                <CardTitle className="mb-4">Review & Submit</CardTitle>
-                {form.photos[0] && <div className="aspect-video border border-[var(--border)] bg-[var(--bg-muted)] mb-4 overflow-hidden" style={{ borderRadius: 'var(--radius-sm)' }}><img src={createPreviewUrl(form.photos[0])} alt="" className="w-full h-full object-cover" /></div>}
-                <div className="space-y-4">
-                  <div><span className="label">Title</span><p className="text-sm font-medium text-[var(--text-primary)] mt-0.5">{form.title}</p></div>
-                  {form.description && <div><span className="label">Description</span><p className="text-sm text-[var(--text-secondary)] mt-0.5">{form.description}</p></div>}
-                  <div className="flex gap-4">
-                    <div className="flex-1"><span className="label">Category</span><p className="text-sm font-medium text-[var(--text-primary)] mt-0.5">{form.category && ISSUE_CATEGORY_LABELS[form.category]}</p></div>
-                    <div className="flex-1"><span className="label">Severity</span><p className="text-sm font-medium text-[var(--text-primary)] mt-0.5 capitalize">{form.severity}</p></div>
-                  </div>
-                  <div><span className="label">Location</span><p className="text-sm text-[var(--text-secondary)] mt-0.5">{form.address || 'Auto-detected'}</p></div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                {/* Left: Photo (50%) */}
+                <div className="animate-photo-fade">
+                  {form.photos[0] ? (
+                    <div className="relative aspect-[4/3] overflow-hidden border-2 border-[var(--black)] shadow-[6px_6px_0_0_var(--accent)]" style={{ borderRadius: 'var(--radius)' }}>
+                      <img src={createPreviewUrl(form.photos[0])} alt="" className="w-full h-full object-cover" />
+                    </div>
+                  ) : (
+                    <div className="relative aspect-[4/3] border-2 border-dashed border-[var(--border)] bg-[var(--bg-muted)] flex items-center justify-center" style={{ borderRadius: 'var(--radius)' }}>
+                      <span className="text-sm text-[var(--text-muted)]">No photo</span>
+                    </div>
+                  )}
                 </div>
-              </Card>
-              <div className="flex gap-3">
-                <Button variant="secondary" className="flex-1" onClick={() => setStep('details')}>Edit</Button>
-                <Button className="flex-1" size="lg" isLoading={isSubmitting} disabled={!form.location} onClick={handleSubmit}>Submit Report</Button>
+
+                {/* Right: Content */}
+                <div className="space-y-4 animate-slide-in-right">
+                  <Card padding="lg">
+                    <CardTitle className="mb-4">Review & Submit</CardTitle>
+                    <div className="space-y-4">
+                      <div><span className="label">Title</span><p className="text-sm font-medium text-[var(--text-primary)] mt-0.5">{form.title}</p></div>
+                      {form.description && <div><span className="label">Description</span><p className="text-sm text-[var(--text-secondary)] mt-0.5">{form.description}</p></div>}
+                      <div className="flex gap-4">
+                        <div className="flex-1"><span className="label">Category</span><p className="text-sm font-medium text-[var(--text-primary)] mt-0.5">{form.category && ISSUE_CATEGORY_LABELS[form.category]}</p></div>
+                        <div className="flex-1"><span className="label">Severity</span><p className="text-sm font-medium text-[var(--text-primary)] mt-0.5 capitalize">{form.severity}</p></div>
+                      </div>
+                      <div><span className="label">Location</span><p className="text-sm text-[var(--text-secondary)] mt-0.5">{form.address || 'Auto-detected'}</p></div>
+                    </div>
+                  </Card>
+                  <div className="flex gap-3">
+                    <Button variant="secondary" className="flex-1" onClick={() => setStep('details')}>Edit</Button>
+                    <Button className="flex-1" size="lg" isLoading={isSubmitting} disabled={!form.location} onClick={handleSubmit}>Submit Report</Button>
+                  </div>
+                </div>
               </div>
             </div>
           )}

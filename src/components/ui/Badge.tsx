@@ -52,17 +52,9 @@ export const SeverityBadge = ({ severity }: { severity: IssueSeverity }) => {
 };
 
 export const StatusBadge = ({ status }: { status: IssueStatus }) => {
-  const colorMap: Record<IssueStatus, BadgeProps['color']> = {
-    reported: 'blue',
-    under_review: 'yellow',
-    work_started: 'blue',
-    in_progress: 'yellow',
-    resolved: 'green',
-    verified_resolved: 'green',
-  };
   const labels: Record<IssueStatus, string> = {
     reported: 'Reported', under_review: 'Review', work_started: 'Working',
     in_progress: 'In Prog.', resolved: 'Resolved', verified_resolved: 'Verified',
   };
-  return <Badge color={colorMap[status]}>{labels[status]}</Badge>;
+  return <span className="stamp">{labels[status]}</span>;
 };

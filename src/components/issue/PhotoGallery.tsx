@@ -4,9 +4,10 @@ import type { Photo } from '../../types/issue';
 interface PhotoGalleryProps {
   photos: Photo[];
   title: string;
+  className?: string;
 }
 
-export const PhotoGallery = ({ photos, title }: PhotoGalleryProps) => {
+export const PhotoGallery = ({ photos, title, className = '' }: PhotoGalleryProps) => {
   const [activeIndex, setActiveIndex] = useState(0);
 
   if (photos.length === 0) return null;
@@ -18,10 +19,14 @@ export const PhotoGallery = ({ photos, title }: PhotoGalleryProps) => {
   };
 
   return (
-    <div className="relative bg-[var(--bg-muted)] border-b border-[var(--black)]">
-      <div className="container">
-        <div className="relative aspect-[2/1] md:aspect-[3/1]">
-          <img src={photos[activeIndex].url} alt={`${title} — Photo ${activeIndex + 1}`} className="w-full h-full object-cover" />
+    <div className={`relative ${className}`}>
+      <div className="relative aspect-[4/3] overflow-hidden border-2 border-[var(--black)] shadow-[6px_6px_0_0_var(--accent)] transition-transform duration-300 hover:scale-[1.02] hover:shadow-[8px_8px_0_0_var(--accent)]" style={{ borderRadius: 'var(--radius)' }}>
+        <img
+          key={activeIndex}
+          src={photos[activeIndex].url}
+          alt={`${title} — Photo ${activeIndex + 1}`}
+          className="w-full h-full object-cover animate-photo-fade"
+        />
 
           {photos.length > 1 && (
             <div className="absolute top-3 right-3 bg-[var(--black)] border border-[var(--black)] px-2 py-0.5">
@@ -47,7 +52,6 @@ export const PhotoGallery = ({ photos, title }: PhotoGalleryProps) => {
               ))}
             </div>
           )}
-        </div>
       </div>
     </div>
   );
