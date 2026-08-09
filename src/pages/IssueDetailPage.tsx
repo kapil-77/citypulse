@@ -61,9 +61,15 @@ export const IssueDetailPage = () => {
       } />
 
       <div className="flex-1 overflow-y-auto">
-        <PhotoGallery photos={issue.photos} title={issue.title} />
+        <div className="container py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+            {/* Left: Photo (50%) */}
+            <div className="lg:sticky lg:top-8 animate-photo-fade">
+              <PhotoGallery photos={issue.photos} title={issue.title} />
+            </div>
 
-        <div className="container py-8 space-y-8">
+            {/* Right: Content */}
+            <div className="space-y-8 animate-slide-in-right">
           <div>
             <div className="flex items-center gap-2 mb-3">
               <CategoryBadge category={issue.category} />
@@ -116,7 +122,7 @@ export const IssueDetailPage = () => {
                     <span className="text-white text-[9px] font-bold">{step.icon}</span>
                   </div>
                   <div className="flex-1 min-w-0 pt-0.5">
-                    <p className="text-sm font-medium">{step.label}</p>
+                    <span className="stamp">{step.label}</span>
                     {step.time && <p className="text-xs text-[var(--text-muted)]">{step.time}</p>}
                   </div>
                 </div>
@@ -146,6 +152,8 @@ export const IssueDetailPage = () => {
           <div className="flex gap-3 pb-8">
             <Button variant="secondary" className="flex-1" onClick={() => navigate(-1)}>Back</Button>
             <Button variant="primary" className="flex-1" onClick={() => navigate('/')}>Home</Button>
+          </div>
+            </div>
           </div>
         </div>
       </div>

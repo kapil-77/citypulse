@@ -51,7 +51,7 @@ export const HomePage = () => {
       <main className="container py-8 md:py-14">
         {/* ── Hero Search ─────────────────────────── */}
         <section className="text-center mb-12 md:mb-16">
-          <h2 className="font-serif text-2xl md:text-4xl font-bold text-[var(--text-primary)] tracking-tight mb-3">
+          <h2 className="font-display text-[3.75rem] leading-none text-[var(--text-primary)] mb-3">
             What's happening around you?
           </h2>
 
@@ -74,7 +74,7 @@ export const HomePage = () => {
         <section className="mb-10">
           <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
             <div className="flex items-center gap-3">
-              <p className="label">Issues Near</p>
+              <p className="label text-[var(--text-secondary)]">Issues Near</p>
               <h3 className="font-serif text-lg md:text-xl font-bold">{locationLabel}</h3>
             </div>
             <button

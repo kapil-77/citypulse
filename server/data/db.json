@@ -1,0 +1,589 @@
+{
+  "issues": [
+    {
+      "id": "issue-1785916378037",
+      "title": "sewage issue",
+      "description": "Sewage issue creating water logging in road",
+      "category": "sewage",
+      "severity": "medium",
+      "status": "reported",
+      "location": {
+        "lat": 28.6139,
+        "lng": 77.209
+      },
+      "address": "mhd road, hyderabad",
+      "localityId": "custom-locality",
+      "photos": [
+        {
+          "id": "photo-1785916378027-0",
+          "url": "http://localhost:3001/uploads/photo-1785916378020-431672545.jpg",
+          "thumbnailUrl": "http://localhost:3001/uploads/photo-1785916378020-431672545.jpg",
+          "uploadedAt": "2026-08-05T07:52:58.027Z",
+          "uploadedBy": "anonymous",
+          "isBefore": true
+        }
+      ],
+      "reportedBy": null,
+      "reportedAt": "2026-08-05T07:52:58.033Z",
+      "resolvedAt": null,
+      "updatedAt": "2026-08-05T07:52:58.037Z"
+    },
+    {
+      "id": "issue-1785863476373",
+      "title": "garbage liter Issue",
+      "description": "Garbage litering by tourists in shimla hill roads",
+      "category": "garbage",
+      "severity": "medium",
+      "status": "reported",
+      "location": {
+        "lat": 28.6139,
+        "lng": 77.209
+      },
+      "address": "shimla, turning road, Himachal",
+      "localityId": "custom-locality",
+      "photos": [
+        {
+          "id": "photo-1785863476365-0",
+          "url": "http://localhost:3001/uploads/photo-1785863476360-161245819.jpg",
+          "thumbnailUrl": "http://localhost:3001/uploads/photo-1785863476360-161245819.jpg",
+          "uploadedAt": "2026-08-04T17:11:16.365Z",
+          "uploadedBy": "anonymous",
+          "isBefore": true
+        }
+      ],
+      "reportedBy": null,
+      "reportedAt": "2026-08-04T17:11:16.368Z",
+      "resolvedAt": null,
+      "updatedAt": "2026-08-04T17:11:16.373Z"
+    },
+    {
+      "id": "issue-1785840132672",
+      "title": "Tourists garbage liter",
+      "description": "Garbage littering all over dhanaulti roads by tourists",
+      "category": "garbage",
+      "severity": "high",
+      "status": "reported",
+      "location": {
+        "lat": 28.6139,
+        "lng": 77.209
+      },
+      "address": "Dhanaulti road, Dehradun",
+      "localityId": "custom-locality",
+      "photos": [
+        {
+          "id": "photo-1785840132644-0",
+          "url": "blob:http://localhost:5173/a9f1a6d5-7e32-4a6e-a2f2-04690adbb727",
+          "thumbnailUrl": "blob:http://localhost:5173/c233c639-6434-4a84-b5f0-369fb8510303",
+          "uploadedAt": "2026-08-04T10:42:12.644Z",
+          "uploadedBy": "anonymous",
+          "isBefore": true
+        }
+      ],
+      "reportedBy": null,
+      "reportedAt": "2026-08-04T10:42:12.644Z",
+      "resolvedAt": null,
+      "updatedAt": "2026-08-04T10:42:12.672Z"
+    },
+    {
+      "id": "issue-1785782263494",
+      "title": "Panchkula Pothole issue",
+      "description": "Water logged potholes are creating issues on road c47",
+      "category": "roads",
+      "severity": "high",
+      "status": "reported",
+      "location": {
+        "lat": 28.6139,
+        "lng": 77.209
+      },
+      "address": "Panchkula, c47 road, chandigarh",
+      "localityId": "custom-locality",
+      "photos": [
+        {
+          "id": "photo-1785782263487-0",
+          "url": "blob:http://localhost:5173/08cd4ad2-1857-42bb-b5bc-30f8062630e3",
+          "thumbnailUrl": "blob:http://localhost:5173/44ade4e8-5e6a-4344-9ea8-610a86ace62a",
+          "uploadedAt": "2026-08-03T18:37:43.488Z",
+          "uploadedBy": "anonymous",
+          "isBefore": true
+        }
+      ],
+      "reportedBy": null,
+      "reportedAt": "2026-08-03T18:37:43.488Z",
+      "resolvedAt": null,
+      "updatedAt": "2026-08-03T18:37:43.494Z"
+    },
+    {
+      "id": "demo-1",
+      "title": "Large pothole on MG Road",
+      "description": "A deep pothole approximately 2 feet wide on the main road near the intersection. Has been causing traffic slowdowns and is dangerous for two-wheeler riders. Multiple near-accidents reported.",
+      "category": "roads",
+      "severity": "high",
+      "status": "reported",
+      "location": {
+        "lat": 28.6129,
+        "lng": 77.2295
+      },
+      "address": "MG Road, Near Sikanderpur Metro Station, Gurugram",
+      "localityId": "gurugram-central",
+      "photos": [
+        {
+          "id": "photo-demo-1",
+          "url": "https://images.unsplash.com/photo-1599157291545-c3b8b2f6b7c4?w=800",
+          "thumbnailUrl": "https://images.unsplash.com/photo-1599157291545-c3b8b2f6b7c4?w=200",
+          "uploadedAt": "2026-07-25T10:30:00Z",
+          "uploadedBy": "user-1",
+          "isBefore": true
+        }
+      ],
+      "reportedBy": {
+        "id": "user-1",
+        "name": "Rahul Sharma",
+        "avatar": null
+      },
+      "reportedAt": "2026-07-25T10:30:00Z",
+      "resolvedAt": null,
+      "updatedAt": "2026-07-25T10:30:00Z"
+    },
+    {
+      "id": "demo-2",
+      "title": "Overflowing garbage bin in Sector 29",
+      "description": "The community garbage bin near the market complex has not been collected in over a week. The overflow is attracting stray animals and creating unhygienic conditions.",
+      "category": "garbage",
+      "severity": "critical",
+      "status": "under_review",
+      "location": {
+        "lat": 28.4716,
+        "lng": 77.0928
+      },
+      "address": "Sector 29 Market, Near Huda City Centre, Gurugram",
+      "localityId": "gurugram-sector-29",
+      "photos": [
+        {
+          "id": "photo-demo-2",
+          "url": "https://images.unsplash.com/photo-1605600659873-2e4b7e3e5a5c?w=800",
+          "thumbnailUrl": "https://images.unsplash.com/photo-1605600659873-2e4b7e3e5a5c?w=200",
+          "uploadedAt": "2026-07-24T14:00:00Z",
+          "uploadedBy": "user-2",
+          "isBefore": true
+        }
+      ],
+      "reportedBy": {
+        "id": "user-2",
+        "name": "Priya Patel",
+        "avatar": null
+      },
+      "reportedAt": "2026-07-24T14:00:00Z",
+      "resolvedAt": null,
+      "updatedAt": "2026-07-24T16:30:00Z"
+    },
+    {
+      "id": "demo-3",
+      "title": "Broken street light near park",
+      "description": "The street light near the children's park entrance has been broken for 3 weeks. The area is completely dark after sunset, making it unsafe for evening walks.",
+      "category": "street_lights",
+      "severity": "medium",
+      "status": "work_started",
+      "location": {
+        "lat": 28.5409,
+        "lng": 77.15
+      },
+      "address": "Block C, Near Nehru Park, Vasant Kunj, New Delhi",
+      "localityId": "delhi-vasant-kunj",
+      "photos": [
+        {
+          "id": "photo-demo-3",
+          "url": "https://images.unsplash.com/photo-1599157291545-c3b8b2f6b7c4?w=800",
+          "thumbnailUrl": "https://images.unsplash.com/photo-1599157291545-c3b8b2f6b7c4?w=200",
+          "uploadedAt": "2026-07-20T09:00:00Z",
+          "uploadedBy": "user-3",
+          "isBefore": true
+        }
+      ],
+      "reportedBy": {
+        "id": "user-3",
+        "name": "Amit Kumar",
+        "avatar": null
+      },
+      "reportedAt": "2026-07-20T09:00:00Z",
+      "resolvedAt": null,
+      "updatedAt": "2026-07-22T11:00:00Z",
+      "timeline": [
+        {
+          "id": "tl-3-1",
+          "issueId": "demo-3",
+          "type": "reported",
+          "timestamp": "2026-07-20T09:00:00Z",
+          "user": {
+            "id": "user-3",
+            "name": "Amit Kumar"
+          },
+          "photo": null,
+          "status": "reported",
+          "notes": "Reported the broken street light near the park entrance. The area is completely dark at night.",
+          "metadata": {}
+        },
+        {
+          "id": "tl-3-2",
+          "issueId": "demo-3",
+          "type": "status_change",
+          "timestamp": "2026-07-21T14:00:00Z",
+          "user": {
+            "id": "auth-1",
+            "name": "NDMC Office",
+            "isAuthority": true,
+            "department": "Street Lighting"
+          },
+          "photo": null,
+          "status": "under_review",
+          "notes": "Issue has been logged and assigned to the street lighting maintenance team for assessment.",
+          "metadata": {}
+        },
+        {
+          "id": "tl-3-3",
+          "issueId": "demo-3",
+          "type": "work_started",
+          "timestamp": "2026-07-22T11:00:00Z",
+          "user": {
+            "id": "auth-2",
+            "name": "Ravi Kumar",
+            "isAuthority": true,
+            "department": "Maintenance"
+          },
+          "photo": null,
+          "status": "work_started",
+          "notes": "Maintenance crew has been dispatched to inspect and repair the street light.",
+          "metadata": {}
+        }
+      ]
+    },
+    {
+      "id": "demo-4",
+      "title": "Water leakage from main pipeline",
+      "description": "A major water pipeline has burst near the bus stop. Clean water is being wasted continuously for the past 2 days. The road is flooded and slippery.",
+      "category": "water_leakage",
+      "severity": "high",
+      "status": "in_progress",
+      "location": {
+        "lat": 28.59,
+        "lng": 77.08
+      },
+      "address": "Near Dwarka Sector 12 Bus Stop, Dwarka, New Delhi",
+      "localityId": "delhi-dwarka",
+      "photos": [
+        {
+          "id": "photo-demo-4",
+          "url": "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800",
+          "thumbnailUrl": "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=200",
+          "uploadedAt": "2026-07-23T08:00:00Z",
+          "uploadedBy": "user-4",
+          "isBefore": true
+        }
+      ],
+      "reportedBy": {
+        "id": "user-4",
+        "name": "Sneha Reddy",
+        "avatar": null
+      },
+      "reportedAt": "2026-07-23T08:00:00Z",
+      "resolvedAt": null,
+      "updatedAt": "2026-07-24T10:00:00Z"
+    },
+    {
+      "id": "demo-5",
+      "title": "Sewage overflow in residential area",
+      "description": "Sewage is overflowing from the manhole near the apartment complex entrance. The stench is unbearable and there is a risk of waterborne diseases.",
+      "category": "sewage",
+      "severity": "critical",
+      "status": "reported",
+      "location": {
+        "lat": 28.63,
+        "lng": 77.22
+      },
+      "address": "Sector 56, Near AWHO Colony, Gurugram",
+      "localityId": "gurugram-sector-56",
+      "photos": [
+        {
+          "id": "photo-demo-5",
+          "url": "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800",
+          "thumbnailUrl": "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=200",
+          "uploadedAt": "2026-07-26T07:00:00Z",
+          "uploadedBy": "user-5",
+          "isBefore": true
+        }
+      ],
+      "reportedBy": {
+        "id": "user-5",
+        "name": "Vikram Singh",
+        "avatar": null
+      },
+      "reportedAt": "2026-07-26T07:00:00Z",
+      "resolvedAt": null,
+      "updatedAt": "2026-07-26T07:00:00Z"
+    },
+    {
+      "id": "demo-6",
+      "title": "Encroachment on footpath",
+      "description": "A local vendor has set up a permanent structure on the footpath, forcing pedestrians to walk on the road. This is especially dangerous for elderly and children.",
+      "category": "encroachment",
+      "severity": "medium",
+      "status": "resolved",
+      "location": {
+        "lat": 28.56,
+        "lng": 77.19
+      },
+      "address": "Hauz Khas Village Road, Near Deer Park, New Delhi",
+      "localityId": "delhi-hauz-khas",
+      "photos": [
+        {
+          "id": "photo-demo-6",
+          "url": "https://images.unsplash.com/photo-1599157291545-c3b8b2f6b7c4?w=800",
+          "thumbnailUrl": "https://images.unsplash.com/photo-1599157291545-c3b8b2f6b7c4?w=200",
+          "uploadedAt": "2026-07-18T12:00:00Z",
+          "uploadedBy": "user-6",
+          "isBefore": true
+        }
+      ],
+      "reportedBy": {
+        "id": "user-6",
+        "name": "Neha Gupta",
+        "avatar": null
+      },
+      "reportedAt": "2026-07-18T12:00:00Z",
+      "resolvedAt": "2026-07-25T16:00:00Z",
+      "updatedAt": "2026-07-25T16:00:00Z"
+    }
+  ],
+  "verifications": {
+    "issue-1785781900936": {
+      "confirmsExisting": 1,
+      "marksFixed": 0,
+      "communityPhotos": [],
+      "updates": [
+        {
+          "id": "vu-1785781924035",
+          "type": "confirm",
+          "userId": "test-user",
+          "timestamp": "2026-08-03T18:32:04.035Z",
+          "content": "Confirmed"
+        }
+      ],
+      "lastVerifiedAt": "2026-08-03T18:32:04.035Z"
+    },
+    "issue-1785782263494": {
+      "confirmsExisting": 1,
+      "marksFixed": 0,
+      "communityPhotos": [],
+      "updates": [
+        {
+          "id": "vu-1785782270954",
+          "type": "confirm",
+          "userId": "anonymous",
+          "timestamp": "2026-08-03T18:37:50.954Z",
+          "content": "Confirmed"
+        }
+      ],
+      "lastVerifiedAt": "2026-08-03T18:37:50.954Z"
+    },
+    "issue-1785840132672": {
+      "confirmsExisting": 1,
+      "marksFixed": 0,
+      "communityPhotos": [],
+      "updates": [
+        {
+          "id": "vu-1785840161958",
+          "type": "confirm",
+          "userId": "anonymous",
+          "timestamp": "2026-08-04T10:42:41.958Z",
+          "content": "Confirmed"
+        },
+        {
+          "id": "vu-1785840190468",
+          "type": "comment",
+          "userId": "anonymous",
+          "timestamp": "2026-08-04T10:43:10.468Z",
+          "content": "Situation is very bad, there should be hefty fines "
+        }
+      ],
+      "lastVerifiedAt": "2026-08-04T10:43:10.468Z"
+    },
+    "issue-1785863476373": {
+      "confirmsExisting": 1,
+      "marksFixed": 0,
+      "communityPhotos": [],
+      "updates": [
+        {
+          "id": "vu-1785863482651",
+          "type": "confirm",
+          "userId": "anonymous",
+          "timestamp": "2026-08-04T17:11:22.651Z",
+          "content": "Confirmed"
+        }
+      ],
+      "lastVerifiedAt": "2026-08-04T17:11:22.651Z"
+    }
+  },
+  "localities": [
+    {
+      "id": "gurugram-central",
+      "name": "Gurugram Central",
+      "city": "Gurugram",
+      "bounds": {
+        "north": 28.47,
+        "south": 28.41,
+        "east": 77.04,
+        "west": 77.1
+      },
+      "center": {
+        "lat": 28.4595,
+        "lng": 77.0266
+      },
+      "issueCount": 3,
+      "unresolvedCount": 3
+    },
+    {
+      "id": "delhi-vasant-kunj",
+      "name": "Vasant Kunj",
+      "city": "New Delhi",
+      "bounds": {
+        "north": 28.55,
+        "south": 28.49,
+        "east": 77.19,
+        "west": 77.13
+      },
+      "center": {
+        "lat": 28.5245,
+        "lng": 77.1565
+      },
+      "issueCount": 3,
+      "unresolvedCount": 2
+    }
+  ],
+  "timeline": {
+    "demo-3": [
+      {
+        "id": "tl-3-1",
+        "issueId": "demo-3",
+        "type": "reported",
+        "timestamp": "2026-07-20T09:00:00Z",
+        "user": {
+          "id": "user-3",
+          "name": "Amit Kumar"
+        },
+        "photo": null,
+        "status": "reported",
+        "notes": "Reported the broken street light near the park entrance. The area is completely dark at night.",
+        "metadata": {}
+      },
+      {
+        "id": "tl-3-2",
+        "issueId": "demo-3",
+        "type": "status_change",
+        "timestamp": "2026-07-21T14:00:00Z",
+        "user": {
+          "id": "auth-1",
+          "name": "NDMC Office",
+          "isAuthority": true,
+          "department": "Street Lighting"
+        },
+        "photo": null,
+        "status": "under_review",
+        "notes": "Issue has been logged and assigned to the street lighting maintenance team for assessment.",
+        "metadata": {}
+      },
+      {
+        "id": "tl-3-3",
+        "issueId": "demo-3",
+        "type": "work_started",
+        "timestamp": "2026-07-22T11:00:00Z",
+        "user": {
+          "id": "auth-2",
+          "name": "Ravi Kumar",
+          "isAuthority": true,
+          "department": "Maintenance"
+        },
+        "photo": null,
+        "status": "work_started",
+        "notes": "Maintenance crew has been dispatched to inspect and repair the street light.",
+        "metadata": {}
+      }
+    ],
+    "issue-1785781900936": [
+      {
+        "id": "tl-1785781924035",
+        "issueId": "issue-1785781900936",
+        "type": "status_change",
+        "timestamp": "2026-08-03T18:32:04.035Z",
+        "user": {
+          "id": "test-user",
+          "name": "test-user"
+        },
+        "photo": null,
+        "status": "reported",
+        "notes": "Confirmed",
+        "metadata": {}
+      }
+    ],
+    "issue-1785782263494": [
+      {
+        "id": "tl-1785782270955",
+        "issueId": "issue-1785782263494",
+        "type": "status_change",
+        "timestamp": "2026-08-03T18:37:50.954Z",
+        "user": {
+          "id": "anonymous",
+          "name": "Anonymous"
+        },
+        "photo": null,
+        "status": "reported",
+        "notes": "Confirmed",
+        "metadata": {}
+      }
+    ],
+    "issue-1785840132672": [
+      {
+        "id": "tl-1785840161958",
+        "issueId": "issue-1785840132672",
+        "type": "status_change",
+        "timestamp": "2026-08-04T10:42:41.958Z",
+        "user": {
+          "id": "anonymous",
+          "name": "Anonymous"
+        },
+        "photo": null,
+        "status": "reported",
+        "notes": "Confirmed",
+        "metadata": {}
+      },
+      {
+        "id": "tl-1785840190469",
+        "issueId": "issue-1785840132672",
+        "type": "photo_update",
+        "timestamp": "2026-08-04T10:43:10.468Z",
+        "user": {
+          "id": "anonymous",
+          "name": "Anonymous"
+        },
+        "photo": null,
+        "status": "reported",
+        "notes": "Situation is very bad, there should be hefty fines ",
+        "metadata": {}
+      }
+    ],
+    "issue-1785863476373": [
+      {
+        "id": "tl-1785863482652",
+        "issueId": "issue-1785863476373",
+        "type": "status_change",
+        "timestamp": "2026-08-04T17:11:22.651Z",
+        "user": {
+          "id": "anonymous",
+          "name": "Anonymous"
+        },
+        "photo": null,
+        "status": "reported",
+        "notes": "Confirmed",
+        "metadata": {}
+      }
+    ]
+  }
+}

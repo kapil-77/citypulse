@@ -15,7 +15,7 @@ export const PopularLocations = ({ onSelect }: PopularLocationsProps) => {
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="label text-[0.625rem] mr-1">Popular:</span>
+      <span className="label text-[0.625rem] text-[var(--text-secondary)] mr-1">Popular:</span>
       {POPULAR.map((name, idx) => (
         <span key={name} className="flex items-center">
           <button

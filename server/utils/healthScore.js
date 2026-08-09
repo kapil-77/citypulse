@@ -111,7 +111,6 @@ export function computeHealthInputFromIssues(issues, previousOverall) {
  */
 export function calculateHealthScore(input) {
   const {
-    unresolvedCount,
     severityDistribution,
     communityConfirmations,
     avgResolutionTime,

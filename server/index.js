@@ -1,7 +1,5 @@
 import express from 'express';
 import cors from 'cors';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
 
 import issuesRouter from './routes/issues.js';
 import verificationsRouter from './routes/verifications.js';
@@ -9,9 +7,7 @@ import healthRouter from './routes/health.js';
 import localitiesRouter from './routes/localities.js';
 import timelineRouter from './routes/timeline.js';
 import uploadsRouter from './routes/uploads.js';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const UPLOAD_DIR = join(__dirname, 'uploads');
+import { checkDatabaseConnection } from './config/supabase.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -19,9 +15,6 @@ const PORT = process.env.PORT || 3001;
 // Middleware
 app.use(cors());
 app.use(express.json());
-
-// Serve uploaded images statically
-app.use('/uploads', express.static(UPLOAD_DIR));
 
 // Routes
 app.use('/api/issues', issuesRouter);
@@ -31,9 +24,14 @@ app.use('/api/localities', localitiesRouter);
 app.use('/api/timeline', timelineRouter);
 app.use('/api/uploads', uploadsRouter);
 
-// Health check
-app.get('/api/health-check', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+// Health check with database connectivity
+app.get('/api/health-check', async (_req, res) => {
+  const dbConnected = await checkDatabaseConnection();
+  res.json({
+    status: dbConnected ? 'ok' : 'degraded',
+    database: dbConnected ? 'connected' : 'unreachable',
+    timestamp: new Date().toISOString(),
+  });
 });
 
 // 404 handler
