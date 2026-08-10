@@ -69,14 +69,13 @@ CityPulse is an AI-powered civic issue reporting platform that enables citizens 
 
 | Home | Report Issue |
 |------|--------------|
-| (<img width="1911" height="993" alt="image" src="https://github.com/user-attachments/assets/0b1c6fe2-4d88-40c3-b88c-952fbac18685" />
-) | (<img width="1917" height="1028" alt="image" src="https://github.com/user-attachments/assets/d5faa6fa-dff3-419f-9059-383bfb837269" />
-) |
+| <img width="1911" height="993" alt="image" src="https://github.com/user-attachments/assets/0b1c6fe2-4d88-40c3-b88c-952fbac18685" /> | (<img width="1917" height="1028" alt="image" src="https://github.com/user-attachments/assets/d5faa6fa-dff3-419f-9059-383bfb837269" />
+|
 
 | AI Dashboard | Issue Details |
 |--------------|---------------|
-| ![](docs/dashboard.png) | (<img width="1917" height="1033" alt="image" src="https://github.com/user-attachments/assets/dde8d3ba-540f-4055-a23f-755e9b06d48f" />
-) |
+| ![](docs/dashboard.png) | <img width="1917" height="1033" alt="image" src="https://github.com/user-attachments/assets/dde8d3ba-540f-4055-a23f-755e9b06d48f" />
+|
 
 ---
 
