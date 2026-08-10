@@ -63,17 +63,34 @@ CityPulse is an AI-powered civic issue reporting platform that enables citizens 
 
 ---
 
-# 📸 Screenshots
+## 📸 Screenshots
 
-> Replace these with actual screenshots/GIFs.
+<table>
+<tr>
+<td align="center"><b>Home</b></td>
+<td align="center"><b>Report Issue</b></td>
+</tr>
 
-| Home | Report Issue |
-|------|--------------|
-<img width="1911" height="993" alt="image" src="https://github.com/user-attachments/assets/0b1c6fe2-4d88-40c3-b88c-952fbac18685" /> <img width="1917" height="1028" alt="image" src="https://github.com/user-attachments/assets/d5faa6fa-dff3-419f-9059-383bfb837269" />
+<tr>
+<td>
+<img src="https://github.com/user-attachments/assets/0b1c6fe2-4d88-40c3-b88c-952fbac18685" width="100%" />
+</td>
 
-| AI Dashboard | Issue Details |
-|--------------|---------------|
-| ![](docs/dashboard.png) <img width="1917" height="1033" alt="image" src="https://github.com/user-attachments/assets/dde8d3ba-540f-4055-a23f-755e9b06d48f" />
+<td>
+<img src="https://github.com/user-attachments/assets/d5faa6fa-dff3-419f-9059-383bfb837269" width="100%" />
+</td>
+</tr>
+
+<tr>
+<td colspan="2" align="center"><b>Issue Details</b></td>
+</tr>
+
+<tr>
+<td colspan="2">
+<img src="https://github.com/user-attachments/assets/dde8d3ba-540f-4055-a23f-755e9b06d48f" width="100%" />
+</td>
+</tr>
+</table>
 
 ---
 
