@@ -3,6 +3,7 @@ import { HomePage } from '../pages/HomePage';
 import { IssueDetailPage } from '../pages/IssueDetailPage';
 import { ReportPage } from '../pages/ReportPage';
 import { LocalityPage } from '../pages/LocalityPage';
+import { CommandCenterPage } from '../pages/CommandCenterPage';
 
 const router = createBrowserRouter([
   {
@@ -20,6 +21,10 @@ const router = createBrowserRouter([
   {
     path: '/localities',
     element: <LocalityPage />,
+  },
+  {
+    path: '/command-center',
+    element: <CommandCenterPage />,
   },
   {
     path: '*',
