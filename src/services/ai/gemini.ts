@@ -8,7 +8,7 @@
  * Requires VITE_GEMINI_API_KEY in .env
  */
 
-import type { IssueCategory, IssueSeverity } from '../../types/issue';
+import type { Issue, IssueCategory, IssueSeverity } from '../../types/issue';
 
 export interface ImageAnalysis {
   suggestedCategory: IssueCategory;
@@ -233,6 +233,69 @@ class GeminiService {
     return this.apiKey.length > 0;
   }
 
+
+  /**
+   * Generate 3-5 concise AI insights from current issues.
+   * Returns human-readable strings. Falls back to statistical insights if Gemini is unavailable.
+   */
+  async analyzeInsights(issues: Issue[]): Promise<string[]> {
+    try {
+      if (!this.apiKey || issues.length === 0) {
+        return this.statisticalInsights(issues);
+      }
+
+      const summary = issues.slice(0, 30).map((i) => ({
+        category: i.category,
+        severity: i.severity,
+        status: i.status,
+        address: i.address,
+        description: i.description,
+      }));
+
+      const prompt = `You are a civic health analyst. Review these reported issues and return a JSON array of 3-5 concise, actionable insights as plain strings. Format: ["insight 1", "insight 2", ...]. Focus on patterns, risks, and recommendations. Only return valid JSON.
+
+Issues: ${JSON.stringify(summary)}`;
+
+      const responseText = await this.callGemini(prompt);
+      const parsed = JSON.parse(responseText);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.map(String).slice(0, 5);
+      }
+      return this.statisticalInsights(issues);
+    } catch {
+      return this.statisticalInsights(issues);
+    }
+  }
+
+  private statisticalInsights(issues: Issue[]): string[] {
+    if (issues.length === 0) {
+      return ['No issues reported yet. Be the first to report!'];
+    }
+    const insights: string[] = [];
+    const categories: Record<string, number> = {};
+    const severities: Record<string, number> = {};
+    const unresolved = issues.filter((i) => i.status !== 'resolved' && i.status !== 'verified_resolved').length;
+
+    for (const issue of issues) {
+      const cat = String(issue.category || 'other');
+      const sev = String(issue.severity || 'medium');
+      categories[cat] = (categories[cat] || 0) + 1;
+      severities[sev] = (severities[sev] || 0) + 1;
+    }
+
+    const topCat = Object.entries(categories).sort((a, b) => b[1] - a[1])[0];
+    if (topCat) insights.push(`${topCat[0]} is the most reported category with ${topCat[1]} issue(s).`);
+
+    const crit = severities.critical || 0;
+    if (crit > 0) insights.push(`${crit} critical issue(s) need immediate attention.`);
+
+    if (unresolved > 0) insights.push(`${unresolved} of ${issues.length} issue(s) are still unresolved.`);
+
+    if (insights.length < 3) {
+      insights.push('Consider prioritizing high-severity categories for faster resolution.');
+    }
+    return insights.slice(0, 5);
+  }
   private validateCategory(cat: string): IssueCategory {
     const valid: IssueCategory[] = [
       'roads', 'garbage', 'water_leakage', 'street_lights',

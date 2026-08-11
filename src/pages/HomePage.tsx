@@ -42,9 +42,14 @@ export const HomePage = () => {
       <TopBar
         title="CityPulse"
         rightAction={
-          <button onClick={() => navigate('/localities')} className="text-xs uppercase tracking-[0.08em] text-white/80 hover:text-white font-medium">
-            Health
-          </button>
+          <>
+            <button onClick={() => navigate('/command-center')} className="text-xs uppercase tracking-[0.08em] text-white/80 hover:text-white font-medium">
+              AI Hub
+            </button>
+            <button onClick={() => navigate('/localities')} className="text-xs uppercase tracking-[0.08em] text-white/80 hover:text-white font-medium">
+              Health
+            </button>
+          </>
         }
       />
 
