@@ -7,6 +7,7 @@ import { Card, CardTitle } from '../components/ui/Card';
 import { IssueCard } from '../components/issue/IssueCard';
 import { LocationSearch } from '../components/location/LocationSearch';
 import { PopularLocations } from '../components/location/PopularLocations';
+import { DynamicHero } from '../components/home/DynamicHero';
 import { UseMyLocation } from '../components/location/UseMyLocation';
 import { useIssues, useSelectedLocation, useSelectLocation } from '../store';
 import type { LocationResult } from '../data/indiaLocations';
@@ -54,13 +55,12 @@ export const HomePage = () => {
       />
 
       <main className="container py-8 md:py-14">
-        {/* ── Hero Search ─────────────────────────── */}
-        <section className="text-center mb-12 md:mb-16">
-          <h2 className="font-display text-[3.75rem] leading-none text-[var(--text-primary)] mb-3">
-            What's happening around you?
-          </h2>
+        {/* ── Dynamic Glass Hero ──────────────────── */}
+        <DynamicHero issues={issues} />
 
-          <div className="max-w-xl mx-auto mt-8">
+        {/* ── Search Controls ─────────────────────── */}
+        <section className="text-center mb-12 md:mb-16">
+          <div className="max-w-xl mx-auto">
             <LocationSearch onSelect={handleLocationSelect} />
 
             <div className="mt-5 flex justify-center">
