@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardTitle, CardDescription } from '../ui/Card';
 import { StatusBadge } from '../ui/Badge';
@@ -8,7 +9,7 @@ interface IssueCardProps {
   compact?: boolean;
 }
 
-export const IssueCard = ({ issue, compact = false }: IssueCardProps) => {
+export const IssueCard = memo(function IssueCard({ issue, compact = false }: IssueCardProps) {
   const navigate = useNavigate();
 
   const formatDate = (dateStr: string) => {
@@ -64,4 +65,6 @@ export const IssueCard = ({ issue, compact = false }: IssueCardProps) => {
       </div>
     </Card>
   );
-};
+});
+
+export default IssueCard;

@@ -56,8 +56,6 @@ export const useStore = create<AppStore>()(
 export const useIssues = () => useStore((s) => s.issues);
 export const useSelectedIssue = () => useStore((s) => s.selectedIssue);
 export const useIssueFilters = () => useStore((s) => s.filters);
-export const useMapState = () => useStore((s) => ({ center: s.center, zoom: s.zoom, selectedIssueId: s.selectedIssueId }));
-export const useUiState = () => useStore((s) => ({ isBottomSheetOpen: s.isBottomSheetOpen, bottomSheetView: s.bottomSheetView, bottomSheetHeight: s.bottomSheetHeight }));
 export const useLocalities = () => useStore((s) => s.localities);
 export const useSelectedLocality = () => useStore((s) => s.selectedLocality);
 export const useSelectedLocation = () => useStore((s) => s.selectedLocation);

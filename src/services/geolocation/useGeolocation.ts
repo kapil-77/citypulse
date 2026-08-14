@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import type { GeoPoint } from '../../types/issue';
 
 interface GeolocationState {
@@ -6,6 +6,8 @@ interface GeolocationState {
   error: string | null;
   isLoading: boolean;
 }
+
+const EMPTY_OPTIONS: PositionOptions = {};
 
 /**
  * Geolocation hook that only requests permission when `requestLocation` is called.
@@ -18,6 +20,18 @@ export const useGeolocation = (options?: PositionOptions) => {
     isLoading: false,
   });
 
+  // Keep the latest options without re-creating `requestLocation` on every render,
+  // which would otherwise cause consumers' effects to re-run.
+  const optionsRef = useRef<PositionOptions | undefined>(options);
+  optionsRef.current = options;
+
+  // Ignore geo callbacks after unmount to avoid setState-on-unmounted warnings/leaks.
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
+
   const requestLocation = useCallback(() => {
     if (!navigator.geolocation) {
       setState({ location: null, error: 'Geolocation not supported', isLoading: false });
@@ -28,6 +42,7 @@ export const useGeolocation = (options?: PositionOptions) => {
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        if (!mountedRef.current) return;
         setState({
           location: { lat: position.coords.latitude, lng: position.coords.longitude },
           error: null,
@@ -35,47 +50,12 @@ export const useGeolocation = (options?: PositionOptions) => {
         });
       },
       (error) => {
+        if (!mountedRef.current) return;
         setState({ location: null, error: error.message, isLoading: false });
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0, ...options }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0, ...(optionsRef.current || EMPTY_OPTIONS) }
     );
-  }, [options]);
+  }, []);
 
   return { ...state, requestLocation };
-};
-
-// Future: Continuous watch position
-export const useWatchPosition = (options?: PositionOptions) => {
-  const [state, setState] = useState<GeolocationState>({
-    location: null,
-    error: null,
-    isLoading: false,
-  });
-
-  const startWatching = useCallback(() => {
-    if (!navigator.geolocation) {
-      setState({ location: null, error: 'Geolocation not supported', isLoading: false });
-      return () => {};
-    }
-
-    setState((prev) => ({ ...prev, isLoading: true, error: null }));
-
-    const watchId = navigator.geolocation.watchPosition(
-      (position) => {
-        setState({
-          location: { lat: position.coords.latitude, lng: position.coords.longitude },
-          error: null,
-          isLoading: false,
-        });
-      },
-      (error) => {
-        setState({ location: null, error: error.message, isLoading: false });
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0, ...options }
-    );
-
-    return () => navigator.geolocation.clearWatch(watchId);
-  }, [options]);
-
-  return { ...state, startWatching };
 };

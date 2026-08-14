@@ -69,7 +69,13 @@ export const ReportPage = () => {
     if (gpsLocation && !gpsLoading) {
       setForm((prev) => ({ ...prev, location: gpsLocation }));
       setIsDetectingLocation(true);
-      reverseGeocode(gpsLocation).then((address) => { setForm((prev) => ({ ...prev, address })); setIsDetectingLocation(false); });
+      let cancelled = false;
+      reverseGeocode(gpsLocation).then((address) => {
+        if (cancelled) return;
+        setForm((prev) => ({ ...prev, address }));
+        setIsDetectingLocation(false);
+      });
+      return () => { cancelled = true; };
     } else if (!gpsLoading && gpsError) { setIsDetectingLocation(false); }
   }, [gpsLocation, gpsLoading, gpsError]);
 
@@ -98,11 +104,15 @@ export const ReportPage = () => {
     }
   }, []);
 
+  // Note: form.title/description/category/severity are intentionally NOT in the deps
+  // so the expensive duplicate/AI scan only runs once when photos + location are set,
+  // instead of re-firing on every keystroke while the user edits the form.
+  // oxlint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (step === 'details' && form.photos.length > 0 && form.location && !hasCheckedDuplicates && !isCheckingDuplicates) {
       checkForDuplicates({ title: form.title || 'New Issue', description: form.description, category: (form.category || 'other') as IssueCategory, severity: (form.severity || 'medium') as IssueSeverity, location: form.location, address: form.address, localityId: 'custom-locality', photos: form.photos }, existingIssues);
     }
-  }, [step, form.photos.length, form.location, hasCheckedDuplicates]);
+  }, [step, form.photos.length, form.location, hasCheckedDuplicates, isCheckingDuplicates, checkForDuplicates, existingIssues]);
 
   const handleRemovePhoto = useCallback((index: number) => {
     setForm((prev) => {

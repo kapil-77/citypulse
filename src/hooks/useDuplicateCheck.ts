@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { duplicateEngine, type DuplicateResult } from '../features/duplicates/duplicateEngine';
 import { GpsProximityStrategy } from '../features/duplicates/strategies/GpsProximity';
 import { CategoryMatchStrategy } from '../features/duplicates/strategies/CategoryMatch';
@@ -31,6 +31,13 @@ export const useDuplicateCheck = () => {
     error: null,
     hasChecked: false,
   });
+
+  // Ignore updates after unmount so a slow AI comparison can't set state on a dead component.
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
 
   const checkForDuplicates = useCallback(async (
     newIssue: NewIssue,
@@ -81,23 +88,29 @@ export const useDuplicateCheck = () => {
         (r) => r.similarityScore >= threshold * 100
       );
 
-      setState({
-        isChecking: false,
-        duplicates: finalResults,
-        error: null,
-        hasChecked: true,
-      });
+      if (mountedRef.current) {
+        setState({
+          isChecking: false,
+          duplicates: finalResults,
+          error: null,
+          hasChecked: true,
+        });
+      }
 
       return finalResults;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Duplicate check failed';
-      setState({ isChecking: false, duplicates: [], error: message, hasChecked: true });
+      if (mountedRef.current) {
+        setState({ isChecking: false, duplicates: [], error: message, hasChecked: true });
+      }
       return [];
     }
   }, []);
 
   const reset = useCallback(() => {
-    setState({ isChecking: false, duplicates: [], error: null, hasChecked: false });
+    if (mountedRef.current) {
+      setState({ isChecking: false, duplicates: [], error: null, hasChecked: false });
+    }
   }, []);
 
   return {

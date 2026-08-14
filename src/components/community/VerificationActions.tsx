@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '../ui/Button';
 import { Card, CardTitle } from '../ui/Card';
 import { PhotoUploader } from '../ui/PhotoUploader';
@@ -31,31 +31,42 @@ export const VerificationActions = ({
   const [comment, setComment] = useState('');
   const [activeAction, setActiveAction] = useState<string | null>(null);
 
+  // Track and clear the "flash" timers on unmount/rapid re-trigger to avoid
+  // setState on an unmounted component and memory leaks.
+  const flashTimerRef = useRef<number | null>(null);
+  useEffect(() => {
+    return () => {
+      if (flashTimerRef.current !== null) clearTimeout(flashTimerRef.current);
+    };
+  }, []);
+
+  const flash = (action: string) => {
+    setActiveAction(action);
+    if (flashTimerRef.current !== null) clearTimeout(flashTimerRef.current);
+    flashTimerRef.current = window.setTimeout(() => setActiveAction(null), 1000);
+  };
+
   const handleConfirm = () => {
-    setActiveAction('confirm');
     onConfirm(issueId);
-    setTimeout(() => setActiveAction(null), 1000);
+    flash('confirm');
   };
 
   const handleMarkFixed = () => {
-    setActiveAction('mark_fixed');
     onMarkFixed(issueId);
-    setTimeout(() => setActiveAction(null), 1000);
+    flash('mark_fixed');
   };
 
   const handlePhoto = (file: File) => {
-    setActiveAction('photo');
     onPhotoUpload(issueId, file);
-    setTimeout(() => setActiveAction(null), 1000);
+    flash('photo');
   };
 
   const handleCommentSubmit = () => {
     if (!comment.trim()) return;
-    setActiveAction('comment');
     onComment(issueId, comment);
     setComment('');
     setShowCommentInput(false);
-    setTimeout(() => setActiveAction(null), 1000);
+    flash('comment');
   };
 
   return (

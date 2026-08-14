@@ -5,11 +5,14 @@ import {
   deleteMultipleFromCloudinary,
 } from '../services/uploadService.js';
 
+const MAX_FILES = 10;
+const MAX_TOTAL_BYTES = 30 * 1024 * 1024; // 30MB across all files in one request
+
 // Use memory storage — files are buffered in memory and streamed to Cloudinary.
 // This avoids writing any temporary files to disk.
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB per file
+  limits: { fileSize: 10 * 1024 * 1024, files: MAX_FILES }, // 10MB per file, 10 files max
   fileFilter: (_req, file, cb) => {
     const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif'];
     if (allowed.includes(file.mimetype)) {
@@ -44,10 +47,16 @@ router.post('/', (req, res) => {
       return res.status(400).json({ error: 'No files uploaded. Use field name "photos".' });
     }
 
+    // Enforce an overall size budget to bound memory usage (files are buffered in memory).
+    const totalBytes = files.reduce((sum, file) => sum + file.size, 0);
+    if (totalBytes > MAX_TOTAL_BYTES) {
+      return res.status(413).json({ error: 'Total upload size exceeds the 30MB limit.' });
+    }
+
     let uploadedPhotos = [];
     try {
       const uploadedAt = new Date().toISOString();
-      const uploadedBy = req.body?.uploadedBy || 'anonymous';
+      const uploadedBy = String(req.body?.uploadedBy || 'anonymous').slice(0, 100);
       const isBefore = req.body?.isBefore === 'false' ? false : true;
 
       // Upload all files to Cloudinary

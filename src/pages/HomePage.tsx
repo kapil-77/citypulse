@@ -11,6 +11,7 @@ import { DynamicHero } from '../components/home/DynamicHero';
 import { UseMyLocation } from '../components/location/UseMyLocation';
 import { useIssues, useSelectedLocation, useSelectLocation } from '../store';
 import type { LocationResult } from '../data/indiaLocations';
+import { isIssueInLocation } from '../utils/locationMatch';
 
 export const HomePage = () => {
   const navigate = useNavigate();
@@ -18,16 +19,10 @@ export const HomePage = () => {
   const selectedLocation = useSelectedLocation();
   const selectLocation = useSelectLocation();
 
-  // Filter issues by the selected location (match city/state name in the issue address)
+  // Filter issues by the selected location (alias-aware address match + geographic fallback)
   const filteredIssues = useMemo(() => {
     if (!selectedLocation) return [];
-    const name = selectedLocation.name.toLowerCase();
-    const state = selectedLocation.state.toLowerCase();
-
-    return issues.filter((issue) => {
-      const address = issue.address.toLowerCase();
-      return address.includes(name) || address.includes(state);
-    });
+    return issues.filter((issue) => isIssueInLocation(issue, selectedLocation));
   }, [issues, selectedLocation]);
 
   const handleLocationSelect = (loc: LocationResult) => {

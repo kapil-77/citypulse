@@ -11,6 +11,8 @@ const DEFAULT_LOCATION: LocationResult = {
   state: 'Delhi',
   type: 'city',
   searchTerms: ['new delhi', 'delhi', 'dilli'],
+  lat: 28.6139,
+  lng: 77.209,
 };
 
 export const createLocationSlice: StateCreator<LocationSlice, [], [], LocationSlice> = (set) => ({
