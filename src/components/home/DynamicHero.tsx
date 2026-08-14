@@ -85,7 +85,7 @@ export const DynamicHero = ({ issues }: DynamicHeroProps) => {
             What's happening around you?
           </h2>
           <p className="text-sm text-[var(--text-secondary)] max-w-xl mx-auto">
-            Live civic intelligence for ${cityName}
+            Live civic intelligence for {cityName}
           </p>
         </div>
 

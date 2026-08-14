@@ -74,7 +74,7 @@ export const CommandCenterPage = () => {
           {/* Live Metrics */}
           <div className="lg:col-span-2">
             <h3 className="font-display text-2xl mb-4" style={{ color: 'var(--text-primary)' }}>Live Metrics</h3>
-            <LiveMetrics issues={issues} verifications={useStore.getState().verifications} healthScore={dashboardScore} />
+            <LiveMetrics issues={issues} verifications={verifications} healthScore={dashboardScore} />
           </div>
 
           {/* Trending Categories */}

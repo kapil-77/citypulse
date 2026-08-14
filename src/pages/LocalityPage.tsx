@@ -6,6 +6,7 @@ import { Button } from '../components/ui/Button';
 import { HealthScoreGauge } from '../components/locality/HealthScoreGauge';
 import { CategoryBreakdown } from '../components/locality/CategoryBreakdown';
 import { useStore, useSelectedLocation, useIssues } from '../store';
+import { isIssueInLocation } from '../utils/locationMatch';
 
 export const LocalityPage = () => {
   const navigate = useNavigate();
@@ -26,12 +27,7 @@ export const LocalityPage = () => {
   // Filter issues by selected location for stats
   const locationIssues = useMemo(() => {
     if (!selectedLocation) return issues;
-    const name = selectedLocation.name.toLowerCase();
-    const state = selectedLocation.state.toLowerCase();
-    return issues.filter((issue) => {
-      const address = issue.address.toLowerCase();
-      return address.includes(name) || address.includes(state);
-    });
+    return issues.filter((issue) => isIssueInLocation(issue, selectedLocation));
   }, [issues, selectedLocation]);
 
   const stats = useMemo(() => {
