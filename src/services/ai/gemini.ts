@@ -25,6 +25,14 @@ export interface ImageComparison {
   reason: string;
 }
 
+export interface CityAnalystReport {
+  verdict: string;
+  topProblems: string[];
+  priorityIssues: string[];
+  trends: string[];
+  recommendations: string[];
+}
+
 interface ImageInput {
   mimeType: string;
   data: string; // base64, WITHOUT the data:image/...;base64, prefix
@@ -115,11 +123,13 @@ class GeminiService {
   }
 
   private getModel(): string {
-    // Use the stable gemini-2.0-flash model
-    return 'models/gemini-2.0-flash';
+    // Use a currently-supported flash model. Overridable via VITE_GEMINI_MODEL
+    // (can point to any model your API key can access, e.g. gemini-2.5-flash-lite).
+    const model = import.meta.env.VITE_GEMINI_MODEL || 'gemini-2.5-flash';
+    return 'models/' + model;
   }
 
-  private async callGemini(prompt: string, images: ImageInput[] = []): Promise<string> {
+  private async callGemini(prompt: string, images: ImageInput[] = [], signal?: AbortSignal): Promise<string> {
     if (!this.apiKey) {
       throw new Error('Gemini API key not configured. Set VITE_GEMINI_API_KEY in .env');
     }
@@ -139,6 +149,7 @@ class GeminiService {
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal,
         body: JSON.stringify({
           contents: [{ role: 'user', parts }],
           generationConfig: {
@@ -296,6 +307,144 @@ Issues: ${JSON.stringify(summary)}`;
     }
     return insights.slice(0, 5);
   }
+  /**
+   * Generate a structured AI analyst report for a city from its actual issues.
+   * Falls back to a statistical report derived only from real data when Gemini
+   * is unavailable or the request fails. Never fabricates numbers.
+   */
+  async analyzeCity(
+    cityName: string,
+    issues: Issue[],
+    signal?: AbortSignal
+  ): Promise<CityAnalystReport> {
+    if (!this.apiKey || issues.length === 0) {
+      return this.statisticalCityAnalyst(cityName, issues);
+    }
+
+    const summary = issues.slice(0, 40).map((i) => ({
+      category: i.category,
+      severity: i.severity,
+      status: i.status,
+      address: i.address,
+      title: i.title,
+      ageDays: Math.max(0, Math.round((Date.now() - new Date(i.reportedAt).getTime()) / 86400000)),
+    }));
+
+    const prompt =
+      'You are a senior civic data analyst for ' + cityName + '. Analyze ONLY the provided reported issues and return valid JSON with EXACTLY these keys: {"' +
+      'verdict":"a short 1-2 sentence overall assessment of civic health","topProblems":["3-5 dominant civic problem categories"],' +
+      '"priorityIssues":["highest-priority unresolved issues"],"trends":["2-4 factual trends"],' +
+      '"recommendations":["3-5 actionable recommendations"]}. Base every claim strictly on the data provided. ' +
+      'If there is little data, say so. Do not invent facts. Issues: ' + JSON.stringify(summary);
+
+    try {
+      const responseText = await this.callGemini(prompt, [], signal);
+      const parsed = JSON.parse(responseText);
+      return {
+        verdict: String(parsed?.verdict || 'Analysis of ' + cityName + ' based on reported issues.'),
+        topProblems: Array.isArray(parsed?.topProblems) ? parsed.topProblems.map(String) : [],
+        priorityIssues: Array.isArray(parsed?.priorityIssues) ? parsed.priorityIssues.map(String) : [],
+        trends: Array.isArray(parsed?.trends) ? parsed.trends.map(String) : [],
+        recommendations: Array.isArray(parsed?.recommendations) ? parsed.recommendations.map(String) : [],
+      };
+    } catch {
+      return this.statisticalCityAnalyst(cityName, issues);
+    }
+  }
+
+  /**
+   * Answer a free-form question about a city using its reported issue data.
+   */
+  async askCityQuestion(
+    cityName: string,
+    issues: Issue[],
+    question: string,
+    signal?: AbortSignal
+  ): Promise<string> {
+    if (!this.apiKey) {
+      return 'The Gemini API key is not configured, so I cannot answer questions right now.';
+    }
+    if (issues.length === 0) {
+      return 'There is no reported issue data for ' + cityName + ' yet, so I cannot answer that.';
+    }
+
+    const summary = issues.slice(0, 40).map((i) => ({
+      category: i.category,
+      severity: i.severity,
+      status: i.status,
+      address: i.address,
+      title: i.title,
+    }));
+
+    const prompt =
+      'You are a civic data analyst for ' + cityName + '. Using ONLY the reported issues provided, answer the user' +
+      's question factually. If the data does not support an answer, say so clearly. Return valid JSON with the shape {"' +
+      'answer":"..."} User question: ' + question + ' Issues: ' + JSON.stringify(summary);
+
+    try {
+      const responseText = await this.callGemini(prompt, [], signal);
+      const parsed = JSON.parse(responseText);
+      return String(parsed?.answer || 'I could not generate an answer from the available data.');
+    } catch {
+      return 'I could not generate an answer right now. Please try again.';
+    }
+  }
+
+  /**
+   * Statistical analyst report derived only from real data (used when Gemini is unavailable).
+   */
+  private statisticalCityAnalyst(cityName: string, issues: Issue[]): CityAnalystReport {
+    if (issues.length === 0) {
+      return {
+        verdict: 'Insufficient data to analyse ' + cityName + ' yet.',
+        topProblems: [],
+        priorityIssues: [],
+        trends: [],
+        recommendations: ['Once issues are reported, an analysis will be generated.'],
+      };
+    }
+
+    const cats: Record<string, number> = {};
+    let active = 0;
+    let resolved = 0;
+    for (const i of issues) {
+      cats[i.category] = (cats[i.category] || 0) + 1;
+      if (i.status === 'resolved' || i.status === 'verified_resolved') resolved++;
+      else active++;
+    }
+    const critical = issues.filter((i) => i.severity === 'critical').length;
+
+    const topProblems = Object.entries(cats)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([cat, n]) => cat + ' (' + n + ' report' + (n === 1 ? '' : 's') + ')');
+
+    const priorityIssues = issues
+      .filter((i) => i.severity === 'critical' || i.severity === 'high')
+      .filter((i) => i.status !== 'resolved' && i.status !== 'verified_resolved')
+      .slice(0, 5)
+      .map((i) => i.title + ' — ' + i.category + ' (' + i.severity + ')');
+
+    const trends: string[] = [];
+    if (critical > 0) trends.push(critical + ' critical issue' + (critical === 1 ? '' : 's') + ' reported.');
+    trends.push(active + ' issue' + (active === 1 ? '' : 's') + ' open, ' + resolved + ' resolved.');
+    const top = Object.entries(cats).sort((a, b) => b[1] - a[1])[0];
+    if (top) trends.push(top[0] + ' is the most-reported category (' + top[1] + ').');
+
+    const recommendations: string[] = [];
+    if (critical > 0) recommendations.push('Prioritise resolution of critical and high-severity issues.');
+    if (top && top[1] >= 2) recommendations.push('Focus on the ' + top[0] + ' category, which dominates reports.');
+    if (recommendations.length === 0) recommendations.push('Monitor reported issues for emerging patterns.');
+
+    const verdict =
+      active === 0
+        ? 'All ' + issues.length + ' reported issue(s) in ' + cityName + ' are resolved.'
+        : cityName + ' has ' + active + ' open issue(s) (' + critical + ' critical).';
+
+    return { verdict, topProblems, priorityIssues, trends, recommendations };
+  }
+
+
   private validateCategory(cat: string): IssueCategory {
     const valid: IssueCategory[] = [
       'roads', 'garbage', 'water_leakage', 'street_lights',
