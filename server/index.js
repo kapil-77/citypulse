@@ -7,6 +7,7 @@ import healthRouter from './routes/health.js';
 import localitiesRouter from './routes/localities.js';
 import timelineRouter from './routes/timeline.js';
 import uploadsRouter from './routes/uploads.js';
+import aiRouter from './routes/ai.js';
 import { checkDatabaseConnection } from './config/supabase.js';
 
 const app = express();
@@ -29,6 +30,7 @@ app.use(
     },
   })
 );
+app.use('/api/ai', express.json({ limit: '10mb' }), aiRouter);
 app.use(express.json({ limit: '1mb' }));
 
 // Routes

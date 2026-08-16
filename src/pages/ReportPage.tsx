@@ -85,9 +85,9 @@ export const ReportPage = () => {
     setStep('details');
     if (file) {
       try {
-        const { geminiService } = await import('../services/ai/gemini');
-        if (geminiService.isConfigured()) {
-          const result = await geminiService.analyzeImage(file);
+        const { aiService } = await import('../services/ai/ai');
+        if (aiService.isConfigured()) {
+          const result = await aiService.analyzeImage(file);
           if (result) {
             setForm((prev) => ({
               ...prev,

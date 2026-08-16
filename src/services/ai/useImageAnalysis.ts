@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { geminiService, type ImageAnalysis } from './gemini';
+import { aiService, type ImageAnalysis } from './ai';
 
 interface AnalysisState {
   isAnalyzing: boolean;
@@ -15,11 +15,11 @@ export const useImageAnalysis = () => {
   });
 
   const analyzeImage = useCallback(async (file: File) => {
-    if (!geminiService.isConfigured()) {
+    if (!aiService.isConfigured()) {
       setState({
         isAnalyzing: false,
         result: null,
-        error: 'Gemini API key not configured. Set VITE_GEMINI_API_KEY in .env',
+        error: 'AI service is unavailable right now.',
       });
       return null;
     }
@@ -27,7 +27,7 @@ export const useImageAnalysis = () => {
     setState({ isAnalyzing: true, result: null, error: null });
 
     try {
-      const result = await geminiService.analyzeImage(file);
+      const result = await aiService.analyzeImage(file);
       setState({ isAnalyzing: false, result, error: null });
       return result;
     } catch (err) {

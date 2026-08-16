@@ -3,7 +3,7 @@ import type { NewIssue, Issue } from '../../../types/issue';
 
 /**
  * AI Similarity Strategy
- * Uses Gemini Vision to compare images between the new issue and existing issues.
+ * Uses AI Vision to compare images between the new issue and existing issues.
  * This runs asynchronously — returns 0 if no photos to compare or if AI is unavailable.
  */
 export const AiSimilarityStrategy: DuplicateStrategy = {
@@ -23,19 +23,19 @@ export const AiSimilarityStrategy: DuplicateStrategy = {
 
 /**
  * Async version of AI comparison — call this separately and update results.
- * Returns a similarity score 0-1 based on Gemini Vision image comparison.
+ * Returns a similarity score 0-1 based on AI Vision image comparison.
  */
 export async function compareWithAi(
   inputPhoto: File,
   existingPhotoUrl: string
 ): Promise<number> {
   try {
-    const { geminiService } = await import('../../../services/ai/gemini');
-    if (!geminiService.isConfigured()) {
+    const { aiService } = await import('../../../services/ai/ai');
+    if (!aiService.isConfigured()) {
       return 0;
     }
 
-    const result = await geminiService.compareImages(inputPhoto, existingPhotoUrl);
+    const result = await aiService.compareImages(inputPhoto, existingPhotoUrl);
     return result.similarityScore;
   } catch {
     return 0;

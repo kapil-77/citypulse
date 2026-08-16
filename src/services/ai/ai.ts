@@ -1,11 +1,13 @@
 /**
+ * Reusable AI service — the CityPulse AI client.
  *
- * Uses the Gemini Flash API for:
- * - Image analysis → category suggestion, severity estimation, description
- * - Image comparison → duplicate detection
- * - Title generation → auto-title from image + location
+ * Features:
+ * - Image analysis, image comparison (duplicate detection)
+ * - Title generation
+ * - City analyst + interactive Q&A assistant
  *
- * Requires VITE_GEMINI_API_KEY in .env
+ * All AI requests are proxied through the backend (POST /api/ai) so the Groq
+ * API key never ships to the browser.
  */
 
 import type { Issue, IssueCategory, IssueSeverity } from '../../types/issue';
@@ -30,6 +32,27 @@ export interface CityAnalystReport {
   topProblems: string[];
   priorityIssues: string[];
   trends: string[];
+  recommendations: string[];
+}
+
+export interface CityAssistantContext {
+  cityName: string;
+  stats: {
+    total: number;
+    active: number;
+    resolved: number;
+    critical: number;
+    healthScore: number | null;
+    avgActiveAgeDays: number;
+  };
+  categories: Record<string, number>;
+  statuses: Record<string, number>;
+  communityConfirmations: number;
+}
+
+export interface CityAnswer {
+  summary: string;
+  keyFindings: string[];
   recommendations: string[];
 }
 
@@ -77,7 +100,7 @@ function fileToImageInput(file: File): Promise<ImageInput> {
 }
 
 /**
- * Fetch an image from a URL and convert it to an ImageInput for Gemini.
+ * Fetch an image from a URL and convert it to an ImageInput for AI.
  * Used when the "existing" image is a URL string (e.g. http://localhost:3001/uploads/...).
  */
 async function urlToImageInput(url: string): Promise<ImageInput> {
@@ -114,71 +137,52 @@ async function toImageInput(src: File | string): Promise<ImageInput> {
   return fileToImageInput(src);
 }
 
-class GeminiService {
-  private apiKey: string;
-  private baseUrl = 'https://generativelanguage.googleapis.com/v1beta';
+const AI_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const TICK = String.fromCharCode(96);
 
-  constructor() {
-    this.apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
+class AiService {
+  /**
+   * The secret key lives on the server; the frontend only talks to our proxy,
+   * so AI features are always considered configured from the client side.
+   */
+  isConfigured(): boolean {
+    return true;
   }
 
-  private getModel(): string {
-    // Use a currently-supported flash model. Overridable via VITE_GEMINI_MODEL
-    // (can point to any model your API key can access, e.g. gemini-2.5-flash-lite).
-    const model = import.meta.env.VITE_GEMINI_MODEL || 'gemini-2.5-flash';
-    return 'models/' + model;
-  }
+  private async callAi(
+    prompt: string,
+    images: ImageInput[] = [],
+    signal?: AbortSignal,
+    maxTokens = 1024
+  ): Promise<string> {
+    const res = await fetch(AI_BASE + '/ai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal,
+      body: JSON.stringify({
+        text: prompt,
+        images,
+        json: true,
+        maxTokens,
+      }),
+    });
 
-  private async callGemini(prompt: string, images: ImageInput[] = [], signal?: AbortSignal): Promise<string> {
-    if (!this.apiKey) {
-      throw new Error('Gemini API key not configured. Set VITE_GEMINI_API_KEY in .env');
+    const data = await res.json().catch(() => null);
+    if (!res.ok) {
+      const message = (data && data.error) || 'AI request failed with status ' + res.status;
+      throw new Error(message);
     }
 
-    const parts: any[] = [{ text: prompt }];
-    for (const img of images) {
-      parts.push({
-        inlineData: {
-          mimeType: img.mimeType,
-          data: img.data,
-        },
-      });
-    }
-
-    const response = await fetch(
-      `${this.baseUrl}/${this.getModel()}:generateContent?key=${this.apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        signal,
-        body: JSON.stringify({
-          contents: [{ role: 'user', parts }],
-          generationConfig: {
-            temperature: 0.2,
-            topK: 1,
-            topP: 1,
-            maxOutputTokens: 1024,
-            responseMimeType: 'application/json',
-          },
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Gemini API error (${response.status}): ${errorText}`);
-    }
-
-    const data = await response.json();
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-
-    // Clean markdown code blocks if present (defensive; responseMimeType should handle it)
-    return text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    const content = (data && data.content) || '';
+    // Clean markdown code blocks if present (defensive).
+    const fence = TICK + TICK + TICK;
+    return content.replace(new RegExp(fence + 'json', 'g'), '').replace(new RegExp(fence, 'g'), '').trim();
   }
 
   async analyzeImage(image: File): Promise<ImageAnalysis> {
     try {
       const img = await fileToImageInput(image);
-      const responseText = await this.callGemini(SYSTEM_PROMPT, [img]);
+      const responseText = await this.callAi(SYSTEM_PROMPT, [img]);
       const result = JSON.parse(responseText);
 
       return {
@@ -191,11 +195,11 @@ class GeminiService {
       };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';
-      console.error('[Gemini] Image analysis failed:', error);
+      console.error('[AI] Image analysis failed:', error);
       // Fallback to defaults
       return {
         suggestedCategory: 'other',
-        description: `Could not analyze image automatically. ${message === 'Gemini API key not configured. Set VITE_GEMINI_API_KEY in .env' ? 'Please configure the Gemini API key.' : 'Please describe the issue.'}`,
+        description: `Could not analyze image automatically. ${message === 'AI service is unavailable' ? 'Please try again later.' : 'Please describe the issue.'}`,
         confidence: 0,
         objects: [],
         severity: 'medium',
@@ -212,7 +216,7 @@ class GeminiService {
   async compareImages(img1: File | string, img2: File | string): Promise<ImageComparison> {
     try {
       const [image1, image2] = await Promise.all([toImageInput(img1), toImageInput(img2)]);
-      const responseText = await this.callGemini(COMPARISON_PROMPT, [image1, image2]);
+      const responseText = await this.callAi(COMPARISON_PROMPT, [image1, image2]);
       const result = JSON.parse(responseText);
 
       const score = Math.min(1, Math.max(0, Number(result.similarityScore) || 0));
@@ -222,7 +226,7 @@ class GeminiService {
         reason: result.reason || 'Comparison completed',
       };
     } catch (error) {
-      console.error('[Gemini] Image comparison failed:', error);
+      console.error('[AI] Image comparison failed:', error);
       return {
         similarityScore: 0,
         isDuplicate: false,
@@ -240,18 +244,16 @@ class GeminiService {
     }
   }
 
-  isConfigured(): boolean {
-    return this.apiKey.length > 0;
-  }
+
 
 
   /**
    * Generate 3-5 concise AI insights from current issues.
-   * Returns human-readable strings. Falls back to statistical insights if Gemini is unavailable.
+   * Returns human-readable strings. Falls back to statistical insights if the AI service is unavailable.
    */
   async analyzeInsights(issues: Issue[]): Promise<string[]> {
     try {
-      if (!this.apiKey || issues.length === 0) {
+      if (issues.length === 0) {
         return this.statisticalInsights(issues);
       }
 
@@ -267,7 +269,7 @@ class GeminiService {
 
 Issues: ${JSON.stringify(summary)}`;
 
-      const responseText = await this.callGemini(prompt);
+      const responseText = await this.callAi(prompt);
       const parsed = JSON.parse(responseText);
       if (Array.isArray(parsed) && parsed.length > 0) {
         return parsed.map(String).slice(0, 5);
@@ -309,7 +311,7 @@ Issues: ${JSON.stringify(summary)}`;
   }
   /**
    * Generate a structured AI analyst report for a city from its actual issues.
-   * Falls back to a statistical report derived only from real data when Gemini
+   * Falls back to a statistical report derived only from real data when AI
    * is unavailable or the request fails. Never fabricates numbers.
    */
   async analyzeCity(
@@ -317,7 +319,7 @@ Issues: ${JSON.stringify(summary)}`;
     issues: Issue[],
     signal?: AbortSignal
   ): Promise<CityAnalystReport> {
-    if (!this.apiKey || issues.length === 0) {
+    if (issues.length === 0) {
       return this.statisticalCityAnalyst(cityName, issues);
     }
 
@@ -330,15 +332,18 @@ Issues: ${JSON.stringify(summary)}`;
       ageDays: Math.max(0, Math.round((Date.now() - new Date(i.reportedAt).getTime()) / 86400000)),
     }));
 
-    const prompt =
-      'You are a senior civic data analyst for ' + cityName + '. Analyze ONLY the provided reported issues and return valid JSON with EXACTLY these keys: {"' +
-      'verdict":"a short 1-2 sentence overall assessment of civic health","topProblems":["3-5 dominant civic problem categories"],' +
-      '"priorityIssues":["highest-priority unresolved issues"],"trends":["2-4 factual trends"],' +
-      '"recommendations":["3-5 actionable recommendations"]}. Base every claim strictly on the data provided. ' +
-      'If there is little data, say so. Do not invent facts. Issues: ' + JSON.stringify(summary);
+    const prompt = [
+      'You are a senior civic data analyst for ' + cityName + '.',
+      'Analyze ONLY the provided reported issues and return valid JSON with EXACTLY these keys:',
+      '{"verdict":"a short 1-2 sentence overall assessment of civic health","topProblems":["3-5 dominant civic problem categories"],"priorityIssues":["highest-priority unresolved issues"],"trends":["2-4 factual trends"],"recommendations":["3-5 actionable recommendations"]}.',
+      'Base every claim strictly on the data provided.',
+      'If there is little data, say so. Do not invent facts.',
+      '',
+      'Issues: ' + JSON.stringify(summary),
+    ].join(' ');
 
     try {
-      const responseText = await this.callGemini(prompt, [], signal);
+      const responseText = await this.callAi(prompt, [], signal);
       const parsed = JSON.parse(responseText);
       return {
         verdict: String(parsed?.verdict || 'Analysis of ' + cityName + ' based on reported issues.'),
@@ -353,22 +358,24 @@ Issues: ${JSON.stringify(summary)}`;
   }
 
   /**
-   * Answer a free-form question about a city using its reported issue data.
+   * Answer a free-form question about a city using its REAL reported issue data
+   * and statistics. Returns a structured, data-grounded answer.
    */
   async askCityQuestion(
-    cityName: string,
+    context: CityAssistantContext,
     issues: Issue[],
     question: string,
     signal?: AbortSignal
-  ): Promise<string> {
-    if (!this.apiKey) {
-      return 'The Gemini API key is not configured, so I cannot answer questions right now.';
-    }
+  ): Promise<CityAnswer> {
     if (issues.length === 0) {
-      return 'There is no reported issue data for ' + cityName + ' yet, so I cannot answer that.';
+      return {
+        summary: 'There is no reported issue data for ' + context.cityName + ' yet, so I cannot answer that.',
+        keyFindings: [],
+        recommendations: [],
+      };
     }
 
-    const summary = issues.slice(0, 40).map((i) => ({
+    const issueSummary = issues.slice(0, 30).map((i) => ({
       category: i.category,
       severity: i.severity,
       status: i.status,
@@ -376,22 +383,56 @@ Issues: ${JSON.stringify(summary)}`;
       title: i.title,
     }));
 
-    const prompt =
-      'You are a civic data analyst for ' + cityName + '. Using ONLY the reported issues provided, answer the user' +
-      's question factually. If the data does not support an answer, say so clearly. Return valid JSON with the shape {"' +
-      'answer":"..."} User question: ' + question + ' Issues: ' + JSON.stringify(summary);
+    const prompt = [
+      'You are a senior civic data analyst for ' + context.cityName + '.',
+      'Answer the user question using ONLY the real city data provided below.',
+      'Return valid JSON exactly like: {"summary":"one short paragraph answering the question","keyFindings":["2-4 concise bullet points derived from the data"],"recommendations":["2-3 actionable recommendations for city authorities"]}.',
+      'If the data does not support an answer, say so clearly. Do not invent facts.',
+      '',
+      'CITY STATS: ' + JSON.stringify(context.stats),
+      'CATEGORY COUNTS: ' + JSON.stringify(context.categories),
+      'STATUS COUNTS: ' + JSON.stringify(context.statuses),
+      'COMMUNITY CONFIRMATIONS: ' + context.communityConfirmations,
+      'ISSUES: ' + JSON.stringify(issueSummary),
+      '',
+      'USER QUESTION: ' + question,
+    ].join(' ');
 
+    const responseText = await this.callAi(prompt, [], signal);
+    return this.parseCityAnswer(responseText);
+  }
+
+  private parseCityAnswer(responseText: string): CityAnswer {
+    let parsed: Partial<CityAnswer> | null = null;
     try {
-      const responseText = await this.callGemini(prompt, [], signal);
-      const parsed = JSON.parse(responseText);
-      return String(parsed?.answer || 'I could not generate an answer from the available data.');
+      parsed = JSON.parse(responseText);
     } catch {
-      return 'I could not generate an answer right now. Please try again.';
+      // Salvage a JSON object from the response if it contains stray text.
+      const match = responseText.match(/{[sS]*}/);
+      if (match) {
+        try { parsed = JSON.parse(match[0]); } catch { parsed = null; }
+      }
     }
+
+    const summary =
+      parsed && typeof parsed.summary === 'string' && parsed.summary.trim().length > 0
+        ? parsed.summary.trim()
+        : '';
+    const keyFindings = Array.isArray(parsed?.keyFindings)
+      ? parsed.keyFindings.map(String).filter((k) => k.trim().length > 0)
+      : [];
+    const recommendations = Array.isArray(parsed?.recommendations)
+      ? parsed.recommendations.map(String).filter((r) => r.trim().length > 0)
+      : [];
+
+    if (!summary) {
+      throw new Error('I could not generate an answer from the available data.');
+    }
+    return { summary, keyFindings, recommendations };
   }
 
   /**
-   * Statistical analyst report derived only from real data (used when Gemini is unavailable).
+   * Statistical analyst report derived only from real data (used when AI is unavailable).
    */
   private statisticalCityAnalyst(cityName: string, issues: Issue[]): CityAnalystReport {
     if (issues.length === 0) {
@@ -459,4 +500,4 @@ Issues: ${JSON.stringify(summary)}`;
   }
 }
 
-export const geminiService = new GeminiService();
+export const aiService = new AiService();
