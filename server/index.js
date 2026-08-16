@@ -50,6 +50,11 @@ app.get('/api/health-check', async (_req, res) => {
     timestamp: new Date().toISOString(),
   });
 });
+// Liveness check (pinged every ~10 min).
+app.get('/api/checks', (_req, res) => {
+  res.set('Cache-Control', 'no-store');
+  res.status(200).json({ status: 'ok' });
+});
 
 // 404 handler
 app.use((_req, res) => {
