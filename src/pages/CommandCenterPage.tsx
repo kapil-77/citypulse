@@ -1,20 +1,21 @@
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TopBar } from '../components/layout/TopBar';
 import { GlassCard } from '../components/command-center/GlassCard';
 import { SkeletonLoader } from '../components/command-center/SkeletonLoader';
 import { QuickActions } from '../components/command-center/QuickActions';
+import { AskAssistant } from '../components/command-center/AskAssistant';
 import { useIssues, useStore, useSelectedLocation } from '../store';
 import { isIssueInLocation } from '../utils/locationMatch';
 import { computeCityHealth } from '../features/health/cityHealthScore';
-import { useCityAnalyst } from '../hooks/useCityAnalyst';
+import { useCityAnalyst, buildCityAssistantContext } from '../hooks/useCityAnalyst';
 
 const statLabel = 'text-[0.625rem] uppercase tracking-[0.15em] text-[var(--text-secondary)]';
 const sectionTitle = 'font-display text-2xl mb-4';
 
 /**
  * AI Command Center — a dedicated AI analyst for the selected city.
- * Uses Gemini with the city's real issue data; falls back to a statistical
+ * Uses AI with the city's real issue data; falls back to a statistical
  * summary derived only from real data when the API key is missing.
  */
 export const CommandCenterPage = () => {
@@ -37,18 +38,12 @@ export const CommandCenterPage = () => {
     [cityIssues, verifications]
   );
 
-  const { loading, report: analyst, ask } = useCityAnalyst(cityName, cityIssues);
+  const assistantContext = useMemo(
+    () => buildCityAssistantContext(cityName, cityIssues, report),
+    [cityName, cityIssues, report]
+  );
 
-  const [question, setQuestion] = useState('');
-  const [answer, setAnswer] = useState<{ text: string; loading: boolean } | null>(null);
-
-  const handleAsk = useCallback(async () => {
-    const q = question.trim();
-    if (!q) return;
-    setAnswer({ text: '', loading: true });
-    const text = await ask(q);
-    setAnswer({ text, loading: false });
-  }, [question, ask]);
+  const { loading, report: analyst, ask } = useCityAnalyst(cityName, cityIssues, assistantContext);
 
   const renderList = (items: string[] | undefined, empty: string) => {
     if (!items || items.length === 0) {
@@ -154,34 +149,7 @@ export const CommandCenterPage = () => {
         </GlassCard>
 
         {/* Ask CityPulse AI */}
-        <GlassCard className="p-6">
-          <h3 className={sectionTitle} style={{ color: 'var(--text-primary)' }}>Ask CityPulse AI</h3>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleAsk()}
-              placeholder={"Ask about " + cityName + "'s reported issues..."}
-              className="flex-1 px-4 py-3 text-sm border border-white/50 bg-white/50 backdrop-blur rounded-xl focus:outline-none focus:border-[var(--accent)]"
-              style={{ color: 'var(--text-primary)' }}
-            />
-            <button
-              type="button"
-              onClick={handleAsk}
-              disabled={!question.trim() || (answer !== null && answer.loading)}
-              className="px-5 py-3 rounded-xl bg-[var(--black)] text-white text-sm font-medium uppercase tracking-wide hover:bg-[#222] transition-colors disabled:opacity-40"
-            >
-              Ask
-            </button>
-          </div>
-
-          {answer && (
-            <div className="mt-4 p-4 rounded-xl border border-white/50 bg-white/40 text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-              {answer.loading ? 'Thinking...' : answer.text}
-            </div>
-          )}
-        </GlassCard>
+        <AskAssistant cityName={cityName} context={assistantContext} ask={ask} />
 
         <QuickActions />
       </main>

@@ -167,7 +167,7 @@ CityPulse
 # ⚙️ Environment Variables
 
 ```env
-VITE_GEMINI_API_KEY=
+GROQ_API_KEY=
 
 VITE_API_URL=
 
