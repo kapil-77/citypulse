@@ -30,11 +30,13 @@ export const PhotoUploader = ({ onPhotoCapture, multiple = false, className = ''
 
   return (
     <>
+      {/* Intentionally no `capture` attribute: the OS-native picker then lets the
+          user choose between the camera and Gallery/Files instead of forcing the
+          camera to launch directly (especially on mobile). */}
       <input
         ref={inputRef}
         type="file"
         accept="image/*"
-        capture="environment"
         multiple={multiple}
         onChange={handleChange}
         className="hidden"

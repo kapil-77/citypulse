@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useGeolocation } from '../../services/geolocation/useGeolocation';
+import type { GeolocationErrorCode } from '../../services/geolocation/useGeolocation';
 import { reverseGeocode } from '../../utils/geoUtils';
-import { getLocationByName } from '../../services/location/locationSearch';
+import { getLocationByName, getNearestLocation } from '../../services/location/locationSearch';
 import type { LocationResult } from '../../data/indiaLocations';
 
 interface UseMyLocationProps {
@@ -9,13 +10,21 @@ interface UseMyLocationProps {
   className?: string;
 }
 
+// Transient failures where retrying can succeed. Permission-denied and unsupported
+// cannot be fixed from the UI (browsers do not re-prompt after denial).
+const RETRYABLE_ERRORS = new Set<GeolocationErrorCode>(['timeout', 'position_unavailable']);
+
 export const UseMyLocation = ({ onLocationFound, className = '' }: UseMyLocationProps) => {
-  const { location, isLoading, error, requestLocation } = useGeolocation();
+  const { location, isLoading, error, errorCode, requestLocation } = useGeolocation();
   const [hasRequested, setHasRequested] = useState(false);
   const [isReverseGeocoding, setIsReverseGeocoding] = useState(false);
 
   const handleClick = () => {
     setHasRequested(true);
+    requestLocation();
+  };
+
+  const handleRetry = () => {
     requestLocation();
   };
 
@@ -39,7 +48,9 @@ export const UseMyLocation = ({ onLocationFound, className = '' }: UseMyLocation
         if (lower.includes('hyderabad')) return getLocationByName('Hyderabad');
         if (lower.includes('pune')) return getLocationByName('Pune');
         if (lower.includes('jaipur')) return getLocationByName('Jaipur');
-        return getLocationByName('Delhi') as LocationResult; // fallback
+        // Address didn't name a supported city — use the nearest known location
+        // to the actual GPS coordinates instead of a hard-coded default.
+        return getNearestLocation(location);
       };
 
       try {
@@ -49,7 +60,7 @@ export const UseMyLocation = ({ onLocationFound, className = '' }: UseMyLocation
         if (match) onLocationFound(match);
       } catch {
         if (!cancelled) {
-          const fallback = getLocationByName('Delhi');
+          const fallback = getNearestLocation(location);
           if (fallback) onLocationFound(fallback);
         }
       } finally {
@@ -62,6 +73,7 @@ export const UseMyLocation = ({ onLocationFound, className = '' }: UseMyLocation
   }, [location, isLoading]);
 
   const showError = hasRequested && error && !isLoading;
+  const canRetry = errorCode ? RETRYABLE_ERRORS.has(errorCode) : false;
 
   return (
     <div className={className}>
@@ -74,9 +86,22 @@ export const UseMyLocation = ({ onLocationFound, className = '' }: UseMyLocation
         {isLoading || isReverseGeocoding ? 'LOCATING...' : 'USE MY LOCATION'}
       </button>
       {showError && (
-        <p className="text-xs text-[var(--status-red)] mt-2 text-center">
-          Location access wasn't allowed. Search manually instead.
-        </p>
+        <div className="mt-3 space-y-2 text-center">
+          <p className="text-xs text-[var(--status-red)]">{error}</p>
+          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+            {canRetry && (
+              <button
+                type="button"
+                onClick={handleRetry}
+                disabled={isLoading}
+                className="text-xs uppercase tracking-[0.08em] text-[var(--accent)] hover:text-[var(--accent-hover)] font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Try Again
+              </button>
+            )}
+            <span className="text-xs text-[var(--text-muted)]">Search your city manually above</span>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -1,4 +1,6 @@
 import { INDIA_LOCATIONS, type LocationResult } from '../../data/indiaLocations';
+import { haversineDistance } from '../../utils/geoUtils';
+import type { GeoPoint } from '../../types/issue';
 
 const MAX_RESULTS = 8;
 
@@ -42,4 +44,24 @@ export function searchLocations(query: string): LocationResult[] {
 export function getLocationByName(name: string): LocationResult | undefined {
   const lower = name.toLowerCase();
   return INDIA_LOCATIONS.find((loc) => loc.name.toLowerCase() === lower);
+}
+
+/**
+ * Return the known India location closest to the given coordinates.
+ * Used as a coordinate-based fallback when a reverse-geocoded address
+ * does not mention any of the supported cities.
+ */
+export function getNearestLocation(point: GeoPoint): LocationResult | undefined {
+  let nearest: LocationResult | undefined;
+  let nearestDistance = Infinity;
+
+  for (const loc of INDIA_LOCATIONS) {
+    const distance = haversineDistance(point, { lat: loc.lat, lng: loc.lng });
+    if (distance < nearestDistance) {
+      nearestDistance = distance;
+      nearest = loc;
+    }
+  }
+
+  return nearest;
 }
