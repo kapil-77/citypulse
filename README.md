@@ -4,7 +4,7 @@
 
 ### AI-Powered Civic Intelligence & Issue Reporting Platform
 
-Transforming citizen-reported issues into actionable civic insights using **Gemini AI**, **Supabase**, **Cloudinary**, and a modern full-stack architecture.
+Transforming citizen-reported issues into actionable civic insights using **Grok AI**, **Supabase**, **Cloudinary**, and a modern full-stack architecture.
 
 <p>
   <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react" />
@@ -31,7 +31,7 @@ CityPulse is an AI-powered civic issue reporting platform that enables citizens 
 
 ### 🤖 AI Powered
 
-- AI issue analysis using **Gemini**
+- AI issue analysis using **Grok**
 - Automatic issue categorization
 - Severity prediction
 - AI-generated summaries & insights
@@ -122,7 +122,7 @@ CityPulse is an AI-powered civic issue reporting platform that enables citizens 
 
 ## AI
 
-- Google Gemini API
+- Grok API
 
 ---
 
@@ -140,7 +140,7 @@ CityPulse is an AI-powered civic issue reporting platform that enables citizens 
       (Data)                        (Images)
                          │
                          ▼
-                    Gemini AI
+                    Grok AI
 ```
 
 ---
@@ -262,6 +262,6 @@ Instead of being just another complaint portal, CityPulse transforms civic repor
 
 ### ⭐ If you found this project interesting, consider giving it a star!
 
-Made with ❤️ using React, Express, Supabase, Cloudinary & Gemini AI.
+Made with ❤️ using React, Express, Supabase, Cloudinary & Grok AI.
 
 </div>
